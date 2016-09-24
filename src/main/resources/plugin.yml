@@ -20,3 +20,6 @@ permissions:
    rwm.setblock.cmd.list:
       description: Gives permission to list all configured blocks
       default: op
+   rwm.setblock.cmd.info:
+      description: Gives permission to get info about a configured preset
+      default: op
