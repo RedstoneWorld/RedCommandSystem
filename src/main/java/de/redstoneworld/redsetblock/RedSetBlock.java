@@ -20,6 +20,7 @@ public class RedSetBlock extends JavaPlugin {
     public void loadConfig() {
         saveDefaultConfig();
         reloadConfig();
+        blockConfig = new HashMap<String, String>();
         ConfigurationSection blocks = getConfig().getConfigurationSection("blocks");
         if (blocks != null && blocks.getKeys(false).size() > 0) {
             for (String configName : blocks.getKeys(false)){
