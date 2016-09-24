@@ -1,0 +1,22 @@
+name: ${project.name}
+main: de.redstoneworld.redsetblock.RedSetBlock
+version: '${minecraft.plugin.version}'
+description: ${project.description}
+authors: [Phoenix616]
+commands:
+   redsetblock:
+      aliases: [rsb,rsetblock]
+      description: Command description.
+      usage: /<command> [<x> <y> <z> <name>|reload|list|info <name>|]
+      permission: rwm.setblock.cmd
+      permission-message: You don't have the permission <permission>
+permissions:
+   rwm.setblock.cmd:
+      description: Gives permission to the plugin command
+      default: op
+   rwm.setblock.cmd.reload:
+      description: Gives permission to reload the plugin
+      default: op
+   rwm.setblock.cmd.list:
+      description: Gives permission to list all configured blocks
+      default: op

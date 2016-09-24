@@ -1,0 +1,3 @@
+# blocks:
+#   Test1: '{Items:[{id:"minecraft:experience_bottle",Count:1,Slot:0}]}'
+#   Test2: '{Items:[{id:"minecraft:experience_bottle",Count:1,Slot:1}]}'
