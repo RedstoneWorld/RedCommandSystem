@@ -76,7 +76,7 @@ public class RedSetBlockCommand implements CommandExecutor {
                 }
             }
             plugin.getCachedPositions().put(sender.getName(), coordsStr);
-            sender.sendMessage(plugin.getPrefix() + ChatColor.GREEN + " Cached position " + coordsStr[0] + " " + coordsStr[1] + " " + coordsStr[2] + " until server restart!");
+            sender.sendMessage(plugin.getPrefix() + ChatColor.GREEN + " Cached position " + coordsStr[0] + " " + coordsStr[1] + " " + coordsStr[2]);
             return true;
         }
 
@@ -172,7 +172,7 @@ public class RedSetBlockCommand implements CommandExecutor {
         sender.sendMessage("/" + label + " <x> <y> <z> <name>");
         sender.sendMessage(ChatColor.GRAY + "Set data of block at x/y/z to a preset");
         sender.sendMessage("/" + label + " setpos <x> <y> <z>");
-        sender.sendMessage(ChatColor.GRAY + "Store position to later be used in /" + label + " position <name>");
+        sender.sendMessage(ChatColor.GRAY + "Store position to later be used in /" + label + " position <name>. Data is stored until server restart!");
         sender.sendMessage("/" + label + " position <name>");
         sender.sendMessage(ChatColor.GRAY + "Set data of block at stored position to preset");
         if (sender.hasPermission("rwm.setblock.cmd.list")) {
