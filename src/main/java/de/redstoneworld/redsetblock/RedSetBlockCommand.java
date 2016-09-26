@@ -58,8 +58,8 @@ public class RedSetBlockCommand implements CommandExecutor {
         } else if (args.length == 4 && "setpos".equalsIgnoreCase(args[0])) {
             String[] coordsStr = new String[3];
             for (int i = 0; i < 3; i++) {
+                String arg = args[i + 1];
                 try {
-                    String arg = args[i + 1];
                     if (arg.startsWith("~")) {
                         String numberStr = arg.substring(1);
                         if (numberStr.length() > 0) {
@@ -69,14 +69,15 @@ public class RedSetBlockCommand implements CommandExecutor {
                         Double.parseDouble(arg);
                     }
 
-                    coordsStr[i] = args[i];
+                    coordsStr[i] = arg;
                 } catch (NumberFormatException e) {
-                    sender.sendMessage(plugin.getPrefix() + ChatColor.RED + " '" + args[i] + "' is not a valid coordinate number!");
+                    sender.sendMessage(plugin.getPrefix() + ChatColor.RED + " '" + arg + "' is not a valid coordinate number!");
                     return true;
                 }
             }
             plugin.getCachedPositions().put(sender.getName(), coordsStr);
             sender.sendMessage(plugin.getPrefix() + ChatColor.GREEN + " Cached position " + coordsStr[0] + " " + coordsStr[1] + " " + coordsStr[2] + " until server restart!");
+            return true;
         }
 
         // Pass the inputted strings directly to the blockdata command
