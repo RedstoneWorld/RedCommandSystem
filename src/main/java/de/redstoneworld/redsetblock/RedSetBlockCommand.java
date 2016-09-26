@@ -158,9 +158,9 @@ public class RedSetBlockCommand implements CommandExecutor {
         PermissionAttachment permAtt = sender.addAttachment(plugin, "minecraft.command.blockdata", true);
         // Dispatch the command
         if (plugin.getServer().dispatchCommand(sender, command)) {
-            sender.sendMessage(plugin.getPrefix() + ChatColor.GREEN + " Set block data to '" + args[3] + "'!");
+            sender.sendMessage(plugin.getPrefix() + ChatColor.GREEN + " Set block data to '" + args[blockDataIndex] + "'!");
         } else {
-            sender.sendMessage(plugin.getPrefix() + ChatColor.RED + " Error while setting block data to '" + args[3] + "'!");
+            sender.sendMessage(plugin.getPrefix() + ChatColor.RED + " Error while setting block data to '" + args[blockDataIndex] + "'!");
         }
         // Remove permission again
         permAtt.remove();
