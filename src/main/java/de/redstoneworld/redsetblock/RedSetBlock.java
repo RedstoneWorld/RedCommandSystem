@@ -11,6 +11,7 @@ import java.util.logging.Level;
 public class RedSetBlock extends JavaPlugin {
 
     private Map<String, String> blockConfig = new HashMap<String, String>();
+    private Map<String, String[]> cachedPositions = new HashMap<String, String[]>();
 
     public void onEnable() {
         loadConfig();
@@ -42,5 +43,9 @@ public class RedSetBlock extends JavaPlugin {
 
     public Map<String, String> getBlockConfig() {
         return blockConfig;
+    }
+
+    public Map<String, String[]> getCachedPositions() {
+        return cachedPositions;
     }
 }

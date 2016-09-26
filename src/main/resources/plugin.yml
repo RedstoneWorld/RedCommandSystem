@@ -7,7 +7,7 @@ commands:
    redsetblock:
       aliases: [rsb,rsetblock]
       description: Command description.
-      usage: /<command> [<x> <y> <z> <name>|reload|list|info <name>|]
+      usage: /<command> [<x> <y> <z> <name>|position <name>|setpos <x> <y> <z>|list|info <name>|help|reload]
       permission: rwm.setblock.cmd
       permission-message: You don't have the permission <permission>
 permissions:
