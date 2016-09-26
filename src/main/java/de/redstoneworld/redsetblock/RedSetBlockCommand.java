@@ -168,26 +168,26 @@ public class RedSetBlockCommand implements CommandExecutor {
     }
 
     private void showHelp(CommandSender sender, String label) {
-        sender.sendMessage(ChatColor.DARK_RED + plugin.getName() + " Commands:");
-        sender.sendMessage("/" + label + " <x> <y> <z> <name>");
-        sender.sendMessage(ChatColor.GRAY + "Set data of block at x/y/z to a preset");
-        sender.sendMessage("/" + label + " setpos <x> <y> <z>");
-        sender.sendMessage(ChatColor.GRAY + "Store position to later be used in /" + label + " position <name>. Data is stored until server restart!");
-        sender.sendMessage("/" + label + " position <name>");
-        sender.sendMessage(ChatColor.GRAY + "Set data of block at stored position to preset");
+        sender.sendMessage(plugin.getPrefix() + " Commands:");
+        sender.sendMessage(ChatColor.RED + "/" + label + " <x> <y> <z> <name>");
+        sender.sendMessage(ChatColor.GRAY + " Set data of block at x/y/z to a preset");
+        sender.sendMessage(ChatColor.RED + "/" + label + " setpos <x> <y> <z>");
+        sender.sendMessage(ChatColor.GRAY + " Store position to later be used in /" + label + " position <name>. Data is stored until server restart!");
+        sender.sendMessage(ChatColor.RED + "/" + label + " position <name>");
+        sender.sendMessage(ChatColor.GRAY + " Set data of block at stored position to preset");
         if (sender.hasPermission("rwm.setblock.cmd.list")) {
-            sender.sendMessage("/" + label + " list");
-            sender.sendMessage(ChatColor.GRAY + "List all presets");
+            sender.sendMessage(ChatColor.RED + "/" + label + " list");
+            sender.sendMessage(ChatColor.GRAY + " List all presets");
         }
         if (sender.hasPermission("rwm.setblock.cmd.info")) {
-            sender.sendMessage("/" + label + " info <name>");
-            sender.sendMessage(ChatColor.GRAY + "Show the data of a preset");
+            sender.sendMessage(ChatColor.RED + "/" + label + " info <name>");
+            sender.sendMessage(ChatColor.GRAY + " Show the data of a preset");
         }
         if (sender.hasPermission("rwm.setblock.cmd.reload")) {
-            sender.sendMessage("/" + label + " reload");
-            sender.sendMessage(ChatColor.GRAY + "Reload the config of the plugin");
+            sender.sendMessage(ChatColor.RED + "/" + label + " reload");
+            sender.sendMessage(ChatColor.GRAY + " Reload the config of the plugin");
         }
-        sender.sendMessage("/" + label + " help");
-        sender.sendMessage(ChatColor.GRAY + "Show this help");
+        sender.sendMessage(ChatColor.RED + "/" + label + " help");
+        sender.sendMessage(ChatColor.GRAY + " Show this help");
     }
 }
