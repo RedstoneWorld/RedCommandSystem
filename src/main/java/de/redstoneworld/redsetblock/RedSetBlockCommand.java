@@ -8,6 +8,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
 import org.bukkit.permissions.PermissionAttachment;
 
 public class RedSetBlockCommand implements CommandExecutor {
@@ -37,7 +38,7 @@ public class RedSetBlockCommand implements CommandExecutor {
                         sender.sendMessage(ChatColor.RED + "Get more info by running /" + label + " info <name>");
                     }
                 } else {
-                    sender.sendMessage(plugin.getPrefix() + ChatColor.RED + " No block data configured!");
+                    plugin.sendMessage(sender, "noblockdata", "name", args[1]);
                 }
                 return true;
             } else if ("help".equalsIgnoreCase(args[0])) {
@@ -49,7 +50,7 @@ public class RedSetBlockCommand implements CommandExecutor {
                 // Get the blockdata
                 String blockData = plugin.getBlockData(args[1]);
                 if (blockData == null) {
-                    sender.sendMessage(plugin.getPrefix() + ChatColor.RED + " '" + args[1] + "' does not exist in the block data config?");
+                    plugin.sendMessage(sender, "presetnotfound", "name", args[1]);
                     return true;
                 }
                 sender.sendMessage(plugin.getPrefix() + ChatColor.WHITE + " " + args[1] + ChatColor.DARK_RED + " - " + ChatColor.WHITE + blockData);
@@ -71,12 +72,12 @@ public class RedSetBlockCommand implements CommandExecutor {
 
                     coordsStr[i] = arg;
                 } catch (NumberFormatException e) {
-                    sender.sendMessage(plugin.getPrefix() + ChatColor.RED + " '" + arg + "' is not a valid coordinate number!");
+                    plugin.sendMessage(sender, "invalidnumber", "input", arg);
                     return true;
                 }
             }
             plugin.getCachedPositions().put(sender.getName(), coordsStr);
-            sender.sendMessage(plugin.getPrefix() + ChatColor.GREEN + " Cached position " + coordsStr[0] + " " + coordsStr[1] + " " + coordsStr[2]);
+            plugin.sendMessage(sender, "cachedposition", "position", coordsStr[0] + " " + coordsStr[1] + " " + coordsStr[2]);
             return true;
         }
 
@@ -90,7 +91,7 @@ public class RedSetBlockCommand implements CommandExecutor {
         } else if (args.length > 1 && ("position".equalsIgnoreCase(args[0]) || "-p".equalsIgnoreCase(args[0]))) {
             coordsStr = plugin.getCachedPositions().get(sender.getName());
             if (coordsStr == null) {
-                sender.sendMessage(plugin.getPrefix() + ChatColor.RED + " You don't have any positions cached! Use /" + label + " setpos <x> <y> <z> to cache one!");
+                plugin.sendMessage(sender, "noposition", "command", label);
                 return true;
             }
             blockDataIndex = 1;
@@ -104,7 +105,7 @@ public class RedSetBlockCommand implements CommandExecutor {
         // Get the blockdata
         String blockData = plugin.getBlockData(args[blockDataIndex]);
         if (blockData == null) {
-            sender.sendMessage(plugin.getPrefix() + ChatColor.RED + " '" + args[blockDataIndex] + "' does not exist in the block data config?");
+            plugin.sendMessage(sender, "presetnotfound", "name", args[blockDataIndex]);
             return true;
         }
 
@@ -132,7 +133,7 @@ public class RedSetBlockCommand implements CommandExecutor {
                     coordsAbs[i] = Double.parseDouble(coordsStr[i]);
                 }
             } catch (NumberFormatException e) {
-                sender.sendMessage(plugin.getPrefix() + ChatColor.RED + " '" + coordsStr[i] + "' is not a valid coordinate number!");
+                plugin.sendMessage(sender, "invalidnumber", "input", coordsStr[i]);
                 return true;
             }
         }
@@ -156,12 +157,15 @@ public class RedSetBlockCommand implements CommandExecutor {
 
         // Temporally add permission to execute blockdata
         PermissionAttachment permAtt = sender.addAttachment(plugin, "minecraft.command.blockdata", true);
+        String sendCommandFeedback = world.getGameRuleValue("sendCommandFeedback");
+        world.setGameRuleValue("sendCommandFeedback", String.valueOf(!(sender instanceof Player) || plugin.getConfig().getBoolean("blockdataoutput")));
         // Dispatch the command
         if (plugin.getServer().dispatchCommand(sender, command)) {
-            sender.sendMessage(plugin.getPrefix() + ChatColor.GREEN + " Set block data to '" + args[blockDataIndex] + "'!");
+            plugin.sendMessage(sender, "blockdata.success", "name", args[blockDataIndex]);
         } else {
-            sender.sendMessage(plugin.getPrefix() + ChatColor.RED + " Error while setting block data to '" + args[blockDataIndex] + "'!");
+            plugin.sendMessage(sender, "blockdata.error", "name", args[blockDataIndex]);
         }
+        world.setGameRuleValue("sendCommandFeedback", sendCommandFeedback);
         // Remove permission again
         permAtt.remove();
         return true;

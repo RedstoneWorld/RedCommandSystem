@@ -1,6 +1,7 @@
 package de.redstoneworld.redsetblock;
 
 import org.bukkit.ChatColor;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -47,5 +48,18 @@ public class RedSetBlock extends JavaPlugin {
 
     public Map<String, String[]> getCachedPositions() {
         return cachedPositions;
+    }
+
+    public void sendMessage(CommandSender sender, String key, String... repl) {
+        String msg = getConfig().getString("messages." + key, null);
+        if (msg == null) {
+            msg = ChatColor.RED + "Unknown language key " + ChatColor.WHITE + "messages." + key;
+        }
+        if (!msg.isEmpty()) {
+            for (int i = 0; i + 1 < repl.length; i += 2) {
+                msg = msg.replace("%" + repl[i] + "%", repl[i+1]);
+            }
+            sender.sendMessage(getPrefix() + " " + ChatColor.translateAlternateColorCodes('&', msg));
+        }
     }
 }
