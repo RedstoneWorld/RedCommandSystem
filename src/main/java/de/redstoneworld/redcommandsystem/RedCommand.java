@@ -21,8 +21,9 @@ import java.util.Map;
 public class RedCommand extends Command implements PluginIdentifiableCommand {
     private final RedCommandSystem plugin;
 
-    private final String command;
+    private final String syntax;
 
+    private final String executeCommand;
     private final boolean executeOutput;
     private final List<String> executePermissions;
 
@@ -31,11 +32,12 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
 
     private Map<String, String[]> cachedPositions = new HashMap<>();
 
-    public RedCommand(RedCommandSystem plugin, String name, List<String> aliases, String permission, String command, List<String> executePermissions, boolean presetPermissions, boolean executeOutput) {
-        super(name, command, "/" + name + " <x> <y> <z> <name>", aliases);
+    public RedCommand(RedCommandSystem plugin, String name, String syntax, List<String> aliases, String permission, String executeCommand, List<String> executePermissions, boolean presetPermissions, boolean executeOutput) {
+        super(name, executeCommand, "/" + name + " " + syntax.replace("<position>", "<x> <y> <z>"), aliases);
         this.plugin = plugin;
+        this.syntax = syntax;
         this.setPermission(permission);
-        this.command = command;
+        this.executeCommand = executeCommand;
         this.executeOutput = executeOutput;
         this.executePermissions = executePermissions;
         this.presetPermissions = presetPermissions;
@@ -50,10 +52,13 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
         this(
                 plugin,
                 section.getName(),
+                section.getString("syntax"),
                 section.getStringList("aliases"),
                 section.getString("permission"),
-                section.getString("command"),
-                section.getStringList("execute.permissions"), section.getBoolean("presetpermissions"), section.getBoolean("execute.output")
+                section.getString("execute.command"),
+                section.getStringList("execute.permissions"),
+                section.getBoolean("presetpermissions"),
+                section.getBoolean("execute.output")
         );
     }
 
@@ -167,7 +172,7 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
         }
 
         // Build the to be executed command
-        String command = plugin.translate(getCommand(), "x", coordsStr[0], "y", coordsStr[1], "z", coordsStr[2], "preset", preset);
+        String command = plugin.translate(getExecuteCommand(), "preset", preset, "position", coordsStr[0] + " " + coordsStr[1] + " " + coordsStr[2]);
 
         // Temporally add permission to execute blockdata
         PermissionAttachment permAtt = sender.addAttachment(plugin);
@@ -191,18 +196,22 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
 
     private void showHelp(CommandSender sender, String label) {
         sender.sendMessage(plugin.getPrefix() + " Commands:");
-        sender.sendMessage(ChatColor.RED + "/" + label + " <x> <y> <z> <name>"
+        sender.sendMessage(ChatColor.RED + "/" + label + " " + getSyntax()
                 + ChatColor.GRAY + " Execute a preset at a certain position");
         sender.sendMessage(ChatColor.RED + "/" + label + " setpos <x> <y> <z>"
                 + ChatColor.GRAY + " Store position to later be used in /" + label + " position <name>. Data is stored until server restart!");
-        sender.sendMessage(ChatColor.RED + "/" + label + " position <name>"
+        sender.sendMessage(ChatColor.RED + "/" + label + " " + getSyntax().replace("<position>", "position")
                 + ChatColor.GRAY + " Execute command preset with stored position");
         sender.sendMessage(ChatColor.RED + "/" + label + " help"
                 + ChatColor.GRAY + " Show this help");
     }
 
-    public String getCommand() {
-        return command;
+    public String getSyntax() {
+        return syntax;
+    }
+
+    public String getExecuteCommand() {
+        return executeCommand;
     }
 
     public boolean showExecuteOutput() {

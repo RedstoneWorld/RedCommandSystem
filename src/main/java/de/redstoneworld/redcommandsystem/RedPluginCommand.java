@@ -59,7 +59,7 @@ public class RedPluginCommand implements CommandExecutor {
                 sender.sendMessage(plugin.getPrefix() + ChatColor.DARK_RED + " Command " + ChatColor.WHITE + command.getName() + ChatColor.DARK_RED + ":");
                 sender.sendMessage(ChatColor.RED + " Aliases: " + ChatColor.WHITE + Arrays.toString(command.getAliases().toArray()));
                 sender.sendMessage(ChatColor.RED + " Permission: " + ChatColor.WHITE + command.getPermission());
-                sender.sendMessage(ChatColor.RED + " Command: " + ChatColor.WHITE + command.getCommand());
+                sender.sendMessage(ChatColor.RED + " Command: " + ChatColor.WHITE + command.getExecuteCommand());
                 sender.sendMessage(ChatColor.RED + " Show command output: " + ChatColor.WHITE + command.showExecuteOutput());
                 sender.sendMessage(ChatColor.RED + " Execute with the following additional permissions:");
                 for (String perm : command.getExecutePermissions()) {
