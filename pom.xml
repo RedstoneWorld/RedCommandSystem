@@ -5,10 +5,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>de.redstoneworld</groupId>
-    <artifactId>redsetblock</artifactId>
-    <version>1.1-SNAPSHOT</version>
-    <description>Bukkit plugin to set predefined blockdata</description>
-    <name>RedSetBlock</name>
+    <artifactId>redcommandsystem</artifactId>
+    <version>1.2-SNAPSHOT</version>
+    <description>Bukkit plugin to configure commands that can be executed with certain presets</description>
+    <name>RedCommandSystem</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -65,6 +65,17 @@
                 <directory>${project.basedir}/src/main/resources</directory>
             </resource>
         </resources>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.1</version>
+                <configuration>
+                    <source>1.7</source>
+                    <target>1.7</target>
+                </configuration>
+            </plugin>
+        </plugins>
     </build>
 
 </project>

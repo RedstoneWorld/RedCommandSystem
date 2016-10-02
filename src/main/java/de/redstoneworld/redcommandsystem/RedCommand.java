@@ -1,61 +1,70 @@
-package de.redstoneworld.redsetblock;
+package de.redstoneworld.redcommandsystem;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.command.BlockCommandSender;
 import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.PluginIdentifiableCommand;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.PermissionAttachment;
+import org.bukkit.plugin.Plugin;
 
-public class RedSetBlockCommand implements CommandExecutor {
-    private final RedSetBlock plugin;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
-    public RedSetBlockCommand(RedSetBlock plugin) {
+public class RedCommand extends Command implements PluginIdentifiableCommand {
+    private final RedCommandSystem plugin;
+
+    private final String command;
+
+    private final boolean executeOutput;
+    private final List<String> executePermissions;
+
+    private final boolean presetPermissions;
+    private final Map<String, String> presets = new LinkedHashMap<>();
+
+    private Map<String, String[]> cachedPositions = new HashMap<>();
+
+    public RedCommand(RedCommandSystem plugin, String name, List<String> aliases, String permission, String command, List<String> executePermissions, boolean presetPermissions, boolean executeOutput) {
+        super(name, command, "/" + name + " <x> <y> <z> <name>", aliases);
         this.plugin = plugin;
+        this.setPermission(permission);
+        this.command = command;
+        this.executeOutput = executeOutput;
+        this.executePermissions = executePermissions;
+        this.presetPermissions = presetPermissions;
+
+        ConfigurationSection presets = plugin.getCommandsConfig().getConfigurationSection(getName() + ".presets");
+        for (String key : presets.getKeys(false)) {
+            addPreset(key, presets.getString(key));
+        }
     }
 
-    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        if (args.length == 0) {
+    public RedCommand(RedCommandSystem plugin, ConfigurationSection section) {
+        this(
+                plugin,
+                section.getName(),
+                section.getStringList("aliases"),
+                section.getString("permission"),
+                section.getString("command"),
+                section.getStringList("execute.permissions"), section.getBoolean("presetpermissions"), section.getBoolean("execute.output")
+        );
+    }
+
+    public boolean execute(CommandSender sender, String label, String[] args) {
+        if (!sender.hasPermission(getPermission())) {
+            sender.sendMessage("You don't have the permission " + getPermission());
+            return true;
+        }
+        if (args.length == 0 || args.length == 1 && "help".equalsIgnoreCase(args[0])) {
             showHelp(sender, label);
             return true;
-        } else if (args.length == 1) {
-            if ("reload".equalsIgnoreCase(args[0]) && sender.hasPermission("rwm.setblock.cmd.reload")) {
-                plugin.loadConfig();
-                sender.sendMessage(plugin.getPrefix() + ChatColor.GREEN + " Config reloaded!");
-                return true;
-            } else if ("list".equalsIgnoreCase(args[0]) && sender.hasPermission("rwm.setblock.cmd.list")) {
-                if (plugin.getBlockConfig().size() > 0) {
-                    sender.sendMessage(ChatColor.DARK_RED + "Blocks configured:");
-                    for (String configName : plugin.getBlockConfig().keySet()) {
-                        sender.sendMessage(ChatColor.GRAY + "> " + ChatColor.WHITE + configName);
-                    }
-                    sender.sendMessage(ChatColor.RED + "Apply one by running /" + label + " <x> <y> <z> <name>");
-                    if (sender.hasPermission("rwm.setblock.cmd.info")) {
-                        sender.sendMessage(ChatColor.RED + "Get more info by running /" + label + " info <name>");
-                    }
-                } else {
-                    plugin.sendMessage(sender, "noblockdata", "name", args[1]);
-                }
-                return true;
-            } else if ("help".equalsIgnoreCase(args[0])) {
-                showHelp(sender, label);
-                return true;
-            }
-        } else if (args.length == 2) {
-            if ("info".equalsIgnoreCase(args[0]) && sender.hasPermission("rwm.setblock.cmd.info")) {
-                // Get the blockdata
-                String blockData = plugin.getBlockData(args[1]);
-                if (blockData == null) {
-                    plugin.sendMessage(sender, "presetnotfound", "name", args[1]);
-                    return true;
-                }
-                sender.sendMessage(plugin.getPrefix() + ChatColor.WHITE + " " + args[1] + ChatColor.DARK_RED + " - " + ChatColor.WHITE + blockData);
-                return true;
-            }
         } else if (args.length == 4 && "setpos".equalsIgnoreCase(args[0])) {
             String[] coordsStr = new String[3];
             for (int i = 0; i < 3; i++) {
@@ -76,20 +85,20 @@ public class RedSetBlockCommand implements CommandExecutor {
                     return true;
                 }
             }
-            plugin.getCachedPositions().put(sender.getName(), coordsStr);
+            getCachedPositions().put(sender.getName(), coordsStr);
             plugin.sendMessage(sender, "cachedposition", "position", coordsStr[0] + " " + coordsStr[1] + " " + coordsStr[2]);
             return true;
         }
 
-        // Pass the inputted strings directly to the blockdata command
+        // Pass the inputted strings directly to the command
         String[] coordsStr = new String[3];
         int blockDataIndex = -1;
 
-        if (args.length == 4) {
+        if (args.length == 4){
             System.arraycopy(args, 0, coordsStr, 0, 3);
             blockDataIndex = 3;
-        } else if (args.length > 1 && ("position".equalsIgnoreCase(args[0]) || "-p".equalsIgnoreCase(args[0]))) {
-            coordsStr = plugin.getCachedPositions().get(sender.getName());
+        }else if (args.length > 1 && ("position".equalsIgnoreCase(args[0]) || "-p".equalsIgnoreCase(args[0]))) {
+            coordsStr = getCachedPositions().get(sender.getName());
             if (coordsStr == null) {
                 plugin.sendMessage(sender, "noposition", "command", label);
                 return true;
@@ -102,10 +111,15 @@ public class RedSetBlockCommand implements CommandExecutor {
             return true;
         }
 
-        // Get the blockdata
-        String blockData = plugin.getBlockData(args[blockDataIndex]);
-        if (blockData == null) {
+        // Get the configured preset string
+        String preset = getPreset(args[blockDataIndex]);
+        if (preset == null) {
             plugin.sendMessage(sender, "presetnotfound", "name", args[blockDataIndex]);
+            return true;
+        }
+
+        if (perPresetPermissions() && !sender.hasPermission(getPermission() + "." + preset.toLowerCase())) {
+            plugin.sendMessage(sender, "nopresetpermission", "name", args[blockDataIndex]);
             return true;
         }
 
@@ -152,18 +166,22 @@ public class RedSetBlockCommand implements CommandExecutor {
             loc.getChunk().load(false);
         }
 
-        // Build the blockdata command
-        String command = "blockdata " + coordsStr[0] + " " + coordsStr[1] + " " + coordsStr[2] + " " + blockData;
+        // Build the to be executed command
+        String command = plugin.translate(getCommand(), "x", coordsStr[0], "y", coordsStr[1], "z", coordsStr[2], "preset", preset);
 
         // Temporally add permission to execute blockdata
-        PermissionAttachment permAtt = sender.addAttachment(plugin, "minecraft.command.blockdata", true);
+        PermissionAttachment permAtt = sender.addAttachment(plugin);
+        for (String perm : getExecutePermissions()) {
+            permAtt.setPermission(perm, !perm.startsWith("-"));
+        }
+
         String sendCommandFeedback = world.getGameRuleValue("sendCommandFeedback");
-        world.setGameRuleValue("sendCommandFeedback", String.valueOf(!(sender instanceof Player) || plugin.getConfig().getBoolean("blockdataoutput")));
+        world.setGameRuleValue("sendCommandFeedback", String.valueOf(!(sender instanceof Player) || showExecuteOutput()));
         // Dispatch the command
         if (plugin.getServer().dispatchCommand(sender, command)) {
-            plugin.sendMessage(sender, "blockdata.success", "name", args[blockDataIndex]);
+            plugin.sendMessage(sender, "command.success", "command", getName(), "preset", args[blockDataIndex]);
         } else {
-            plugin.sendMessage(sender, "blockdata.error", "name", args[blockDataIndex]);
+            plugin.sendMessage(sender, "command.failure", "command", getName(), "preset", args[blockDataIndex]);
         }
         world.setGameRuleValue("sendCommandFeedback", sendCommandFeedback);
         // Remove permission again
@@ -174,24 +192,49 @@ public class RedSetBlockCommand implements CommandExecutor {
     private void showHelp(CommandSender sender, String label) {
         sender.sendMessage(plugin.getPrefix() + " Commands:");
         sender.sendMessage(ChatColor.RED + "/" + label + " <x> <y> <z> <name>"
-                + ChatColor.GRAY + " Set data of block at x/y/z to a preset");
+                + ChatColor.GRAY + " Execute a preset at a certain position");
         sender.sendMessage(ChatColor.RED + "/" + label + " setpos <x> <y> <z>"
                 + ChatColor.GRAY + " Store position to later be used in /" + label + " position <name>. Data is stored until server restart!");
         sender.sendMessage(ChatColor.RED + "/" + label + " position <name>"
-                + ChatColor.GRAY + " Set data of block at stored position to preset");
-        if (sender.hasPermission("rwm.setblock.cmd.list")) {
-            sender.sendMessage(ChatColor.RED + "/" + label + " list"
-                    + ChatColor.GRAY + " List all presets");
-        }
-        if (sender.hasPermission("rwm.setblock.cmd.info")) {
-            sender.sendMessage(ChatColor.RED + "/" + label + " info <name>"
-                    + ChatColor.GRAY + " Show the data of a preset");
-        }
-        if (sender.hasPermission("rwm.setblock.cmd.reload")) {
-            sender.sendMessage(ChatColor.RED + "/" + label + " reload"
-                    + ChatColor.GRAY + " Reload the config of the plugin");
-        }
+                + ChatColor.GRAY + " Execute command preset with stored position");
         sender.sendMessage(ChatColor.RED + "/" + label + " help"
                 + ChatColor.GRAY + " Show this help");
+    }
+
+    public String getCommand() {
+        return command;
+    }
+
+    public boolean showExecuteOutput() {
+        return executeOutput;
+    }
+
+    public List<String> getExecutePermissions() {
+        return executePermissions;
+    }
+
+    public boolean perPresetPermissions() {
+        return presetPermissions;
+    }
+
+    public String getPreset(String configName) {
+        return presets.get(configName.toLowerCase());
+    }
+
+    public Map<String, String> getPresets() {
+        return presets;
+    }
+
+    public Map<String, String[]> getCachedPositions() {
+        return cachedPositions;
+    }
+
+    private void addPreset(String name, String preset) {
+        presets.put(name.toLowerCase(), preset);
+    }
+
+    @Override
+    public Plugin getPlugin() {
+        return plugin;
     }
 }

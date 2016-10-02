@@ -1,13 +1,10 @@
-# blocks:
-#   Test1: '{Items:[{id:"minecraft:experience_bottle",Count:1,Slot:0}]}'
-#   Test2: '{Items:[{id:"minecraft:experience_bottle",Count:1,Slot:1}]}'
-blockdataoutput: false
+configversion: 2
 messages:
-  blockdata:
-    success: "&aSet block data to '%name%'!" # Use %name% for the preset name
-    error: "&cError while setting block data to '%name%'!"
   noposition: "&cYou don't have any positions cached! Use /%command% setpos <x> <y> <z> to cache one!"
   cachedposition: "&aCached position '%position%'"
   invalidnumber: "&c'%input%' is not a valid coordinate number!"
-  presetnotfound: "&c'%name%' does not exist in the block data config?"
-  noblockdata: "&cNo block data configured!"
+  commandnotfound: "&c'%name%' does not exist in the commands config?"
+  nopresetpermission: "&cYou don't have the permission to use the preset '%name%'!"
+  command:
+    success: "&eExecuted '%command%' with preset '%preset%'!"
+    failure: "&cFailed to execute '%command%' with preset '%preset%'!"

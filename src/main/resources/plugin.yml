@@ -1,25 +1,28 @@
 name: ${project.name}
-main: de.redstoneworld.redsetblock.RedSetBlock
+main: de.redstoneworld.redcommandsystem.RedCommandSystem
 version: '${minecraft.plugin.version}'
 description: ${project.description}
 authors: [Phoenix616]
 commands:
-   redsetblock:
-      aliases: [rsb,rsetblock]
+   redcommandsystem:
+      aliases: [rcs]
       description: Command description.
       usage: /<command> [<x> <y> <z> <name>|position <name>|setpos <x> <y> <z>|list|info <name>|help|reload]
-      permission: rwm.setblock.cmd
+      permission: rwm.commandsystem.cmd
       permission-message: You don't have the permission <permission>
 permissions:
-   rwm.setblock.cmd:
+   rwm.commandsystem.cmd:
       description: Gives permission to the plugin command
       default: op
-   rwm.setblock.cmd.reload:
+   rwm.commandsystem.cmd.reload:
       description: Gives permission to reload the plugin
       default: op
-   rwm.setblock.cmd.list:
-      description: Gives permission to list all configured blocks
+   rwm.commandsystem.cmd.list:
+      description: Gives permission to list all configured commands
       default: op
-   rwm.setblock.cmd.info:
-      description: Gives permission to get info about a configured preset
+   rwm.commandsystem.cmd.info:
+      description: Gives permission to get info about a configured command
+      default: op
+   rwm.commandsystem.cmd.presets:
+      description: Gives permission to get the list of presets for a specific command
       default: op
