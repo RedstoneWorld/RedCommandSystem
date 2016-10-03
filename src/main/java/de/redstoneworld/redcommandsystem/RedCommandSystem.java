@@ -57,7 +57,7 @@ public class RedCommandSystem extends JavaPlugin {
                 ConfigurationSection messages = getConfig().getConfigurationSection("messages");
                 for (String key : messages.getKeys(true)) {
                     if (oldConfig.contains("messages." + key, true)) {
-                        messages.set(key, oldConfig.get(key));
+                        messages.set(key, oldConfig.get("messages." + key));
                     }
                 }
             }
