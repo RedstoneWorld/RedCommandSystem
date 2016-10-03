@@ -28,4 +28,10 @@ public class RedCommandManager {
     public Map<String, RedCommand> getCommands() {
         return commandMap;
     }
+
+    public void destroy() {
+        for (RedCommand command : commandMap.values()) {
+            command.unregister(bukkitCommandMap);
+        }
+    }
 }

@@ -13,7 +13,7 @@ import java.util.logging.Level;
 public class RedCommandSystem extends JavaPlugin {
 
     private ConfigAccessor commandsConfig;
-    private RedCommandManager rcm;
+    private RedCommandManager rcm = null;
 
     public void onEnable() {
         loadConfig();
@@ -21,6 +21,9 @@ public class RedCommandSystem extends JavaPlugin {
     }
 
     public boolean loadConfig() {
+        if (rcm != null) {
+            rcm.destroy();
+        }
         try {
             rcm = new RedCommandManager(this);
         } catch (IllegalAccessException | NoSuchFieldException e) {
