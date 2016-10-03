@@ -55,10 +55,17 @@ public class RedPluginCommand implements CommandExecutor {
                     plugin.sendMessage(sender, "commandnotfound", "name", args[1]);
                     return true;
                 }
-                sender.sendMessage(plugin.getPrefix() + ChatColor.DARK_RED + " Command " + ChatColor.WHITE + command.getName() + ChatColor.DARK_RED + ":");
-                sender.sendMessage(ChatColor.RED + " Aliases: " + ChatColor.WHITE + Arrays.toString(command.getAliases().toArray()));
+                sender.sendMessage(plugin.getPrefix() + " " + ChatColor.WHITE + command.getName() + ChatColor.DARK_RED + " Info:");
+                sender.sendMessage(ChatColor.RED + " Aliases:");
+                for (String alias : command.getAliases()) {
+                    sender.sendMessage(ChatColor.RED + " > " + ChatColor.WHITE + alias);
+                }
+                if (command.getAliases().size() == 0) {
+                    sender.sendMessage(ChatColor.WHITE + " No aliases configured!");
+                }
+                sender.sendMessage(ChatColor.RED + " Syntax: " + ChatColor.WHITE + command.getSyntax());
                 sender.sendMessage(ChatColor.RED + " Permission: " + ChatColor.WHITE + command.getPermission());
-                sender.sendMessage(ChatColor.RED + " Command: " + ChatColor.WHITE + command.getExecuteCommand());
+                sender.sendMessage(ChatColor.RED + " Command to be executed: " + ChatColor.WHITE + command.getExecuteCommand());
                 sender.sendMessage(ChatColor.RED + " Show command output: " + ChatColor.WHITE + command.showExecuteOutput());
                 sender.sendMessage(ChatColor.RED + " Execute with the following additional permissions:");
                 for (String perm : command.getExecutePermissions()) {
