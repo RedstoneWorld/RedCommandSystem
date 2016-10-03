@@ -2,9 +2,9 @@ package de.redstoneworld.redcommandsystem;
 
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.MemoryConfiguration;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -36,31 +36,32 @@ public class RedCommandSystem extends JavaPlugin {
         commandsConfig.saveDefaultConfig();
         commandsConfig.reloadConfig();
 
-        if (getConfig().getInt("configversion", 1) == 1) {
-            Map<String, String> blockConfig = new LinkedHashMap<>();
-            ConfigurationSection blocks = getConfig().getConfigurationSection("blocks");
-            if (blocks != null && blocks.getKeys(false).size() > 0) {
-                for (String configName : blocks.getKeys(false)) {
-                    blockConfig.put(configName, blocks.getString(configName));
+        if (!getConfig().getBoolean("imported", true)) {
+            getConfig().set("imported", true);
+
+            File oldDataFolder = new File(getDataFolder().getParentFile(), "RedSetBlock");
+            File oldConfigFile = new File(oldDataFolder, "config.yml");
+            if (oldDataFolder.exists() && oldConfigFile.exists()) {
+                getLogger().log(Level.INFO, "Found old RedSetBlock installation. Trying to import data!");
+                FileConfiguration oldConfig = YamlConfiguration.loadConfiguration(oldConfigFile);
+
+                ConfigurationSection blocks = oldConfig.getConfigurationSection("blocks");
+                if (blocks != null && blocks.getKeys(false).size() > 0) {
+                    for (String configName : blocks.getKeys(false)) {
+                        getCommandsConfig().set("blockdata.presets." + configName, blocks.getString(configName));
+                    }
+                    getLogger().log(Level.INFO, "Imported " + blocks.getKeys(false).size() + " block data configs!");
                 }
-                getLogger().log(Level.INFO, "Loaded " + blockConfig.size() + " block data configs!");
-            }
+                commandsConfig.saveConfig();
 
-            Configuration oldConfig = new MemoryConfiguration(getConfig());
-
-            File configFile = new File(getDataFolder(), "config.yml");
-            configFile.delete();
-            reloadConfig();
-            // Update keys from new config with changed ones from old config
-            for (String key : getConfig().getKeys(true)) {
-                if (oldConfig.get(key) != null) {
-                    getConfig().set(key, oldConfig.get(key));
+                // Update keys from new config with changed ones from old config
+                for (String key : getConfig().getKeys(true)) {
+                    if (oldConfig.contains(key, true)) {
+                        getConfig().set(key, oldConfig.get(key));
+                    }
                 }
             }
             saveConfig();
-
-            getCommandsConfig().set("blockdata.presets", blockConfig);
-            commandsConfig.saveConfig();
         }
 
         for (String key : getCommandsConfig().getKeys(false)) {
