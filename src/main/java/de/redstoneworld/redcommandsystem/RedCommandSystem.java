@@ -53,10 +53,11 @@ public class RedCommandSystem extends JavaPlugin {
                 }
                 commandsConfig.saveConfig();
 
-                // Update keys from new config with changed ones from old config
-                for (String key : getConfig().getKeys(true)) {
-                    if (oldConfig.contains(key, true)) {
-                        getConfig().set(key, oldConfig.get(key));
+                // Update messages in new config with changed ones from old config
+                ConfigurationSection messages = getConfig().getConfigurationSection("messages");
+                for (String key : messages.getKeys(true)) {
+                    if (oldConfig.contains("messages." + key, true)) {
+                        messages.set(key, oldConfig.get(key));
                     }
                 }
             }
