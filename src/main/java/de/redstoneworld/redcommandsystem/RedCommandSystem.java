@@ -36,7 +36,7 @@ public class RedCommandSystem extends JavaPlugin {
         commandsConfig.reloadConfig();
 
         if (!getConfig().getBoolean("imported", true)) {
-            getConfig().set("imported", true);
+            getConfig().set("imported", null);
 
             File oldDataFolder = new File(getDataFolder().getParentFile(), "RedSetBlock");
             File oldConfigFile = new File(oldDataFolder, "config.yml");
