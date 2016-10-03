@@ -1,4 +1,4 @@
-configversion: 2
+imported: false
 messages:
   noposition: "&cYou don't have any positions cached! Use /%command% setpos <x> <y> <z> to cache one!"
   cachedposition: "&aCached position '%position%'"
