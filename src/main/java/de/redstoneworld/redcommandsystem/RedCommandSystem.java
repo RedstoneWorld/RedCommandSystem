@@ -52,14 +52,6 @@ public class RedCommandSystem extends JavaPlugin {
                     getLogger().log(Level.INFO, "Imported " + blocks.getKeys(false).size() + " block data configs!");
                 }
                 commandsConfig.saveConfig();
-
-                // Update messages in new config with changed ones from old config
-                ConfigurationSection messages = getConfig().getConfigurationSection("messages");
-                for (String key : messages.getKeys(true)) {
-                    if (oldConfig.contains("messages." + key, true)) {
-                        messages.set(key, oldConfig.get("messages." + key));
-                    }
-                }
             }
             saveConfig();
         }
