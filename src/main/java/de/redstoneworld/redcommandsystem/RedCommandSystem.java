@@ -65,7 +65,7 @@ public class RedCommandSystem extends JavaPlugin {
     }
 
     public String getPrefix() {
-        return ChatColor.WHITE + "[" + ChatColor.DARK_RED + getName() + ChatColor.WHITE + "]" + ChatColor.RESET;
+        return ChatColor.WHITE + "[" + ChatColor.DARK_RED + "RCS" + ChatColor.WHITE + "]" + ChatColor.RESET;
     }
 
     public void sendMessage(CommandSender sender, String key, String... repl) {
