@@ -2,10 +2,10 @@ imported: false
 messages:
   noposition: "&cYou don't have any positions cached! Use /%command% setpos <x> <y> <z> to cache one!"
   cachedposition: "&aCached position '%position%'"
-  invalidnumber: "&c'%input%' is not a valid coordinate number!"
-  commandnotfound: "&c'%name%' does not exist in the commands config?"
-  nopresetpermission: "&cYou don't have the permission to use the preset '%preset%' of '%command%'!"
-  presetnotfound: "&cPreset '%preset%' does not exist in the config of '%command%'?"
+  invalidnumber: "&f%input%&c is not a valid coordinate number!"
+  commandnotfound: "&f%name&c does not exist in the commands config?"
+  nopresetpermission: "&cYou don't have the permission to use the preset &f%preset%&c of &f%command%&c!"
+  presetnotfound: "&cPreset &f%preset%&c does not exist in the config of &f%command%&c?"
   command:
-    success: "&eExecuted '%command%' with preset '%preset%'!"
-    failure: "&cFailed to execute '%command%' with preset '%preset%'!"
+    success: "&eExecuted &f%command%&c with preset &f%preset%&c!"
+    failure: "&cFailed to execute &f%command%&c with preset &f%preset%&c!"
