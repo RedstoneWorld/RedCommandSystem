@@ -34,10 +34,9 @@ public class RedPluginCommand implements CommandExecutor {
                     sender.sendMessage(ChatColor.DARK_RED + "Commands configured:");
                     for (RedCommand command : plugin.getCommandManager().getCommands().values()) {
                         if (sender.hasPermission(command.getPermission())) {
-                            sender.sendMessage(ChatColor.GRAY + "> " + ChatColor.WHITE + command.getName() + ChatColor.GRAY + "(" + command.getPresets().size() + ")");
+                            sender.sendMessage(ChatColor.GRAY + "> /" + ChatColor.WHITE + command.getName() + ChatColor.GRAY + " (Presets: " + command.getPresets().size() + ")");
                         }
                     }
-                    sender.sendMessage(ChatColor.RED + "Apply one by running /" + label + " <x> <y> <z> <name>");
                     if (sender.hasPermission("rwm.setblock.cmd.info")) {
                         sender.sendMessage(ChatColor.RED + "Get more info by running /" + label + " info <name>");
                     }
