@@ -1,6 +1,4 @@
 package de.redstoneworld.redcommandsystem;
-/* Source: https://gist.github.com/3174347 */
-
 /*
 * Copyright (C) 2012
 *
@@ -25,6 +23,7 @@ package de.redstoneworld.redcommandsystem;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.logging.Level;
 
 import org.bukkit.configuration.file.FileConfiguration;
@@ -44,21 +43,19 @@ public class ConfigAccessor {
             throw new IllegalArgumentException("plugin cannot be null");
         this.plugin = plugin;
         this.fileName = fileName;
+        File dataFolder = plugin.getDataFolder();
+        if (dataFolder == null)
+            throw new IllegalStateException();
+        this.configFile = new File(plugin.getDataFolder(), fileName);
     }
 
     public void reloadConfig() {
-        if (configFile == null) {
-            File dataFolder = plugin.getDataFolder();
-            if (dataFolder == null)
-                throw new IllegalStateException();
-            configFile = new File(dataFolder, fileName);
-        }
         fileConfiguration = YamlConfiguration.loadConfiguration(configFile);
 
         // Look for defaults in the jar
         InputStream defConfigStream = plugin.getResource(fileName);
         if (defConfigStream != null) {
-            YamlConfiguration defConfig = YamlConfiguration.loadConfiguration(defConfigStream);
+            YamlConfiguration defConfig = YamlConfiguration.loadConfiguration(new InputStreamReader(defConfigStream));
             fileConfiguration.setDefaults(defConfig);
         }
     }
@@ -71,9 +68,7 @@ public class ConfigAccessor {
     }
 
     public void saveConfig() {
-        if (fileConfiguration == null || configFile == null) {
-            return;
-        } else {
+        if (fileConfiguration != null && configFile != null) {
             try {
                 getConfig().save(configFile);
             } catch (IOException ex) {
@@ -83,16 +78,9 @@ public class ConfigAccessor {
     }
 
     public void saveDefaultConfig() {
-        if (configFile == null || !configFile.exists()) {
-            plugin.saveResource(fileName, false);
+        if (!configFile.exists()) {
+            this.plugin.saveResource(fileName, false);
         }
-    }
-
-    public File getFile() {
-        File dataFolder = plugin.getDataFolder();
-        if (dataFolder == null)
-            throw new IllegalStateException();
-        return new File(dataFolder, fileName);
     }
 
 }
