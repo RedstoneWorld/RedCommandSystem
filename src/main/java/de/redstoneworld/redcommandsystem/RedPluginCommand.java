@@ -101,7 +101,11 @@ public class RedPluginCommand implements CommandExecutor {
                 Map<String, String> presets = new HashMap<>();
                 for (Map.Entry<String, String> preset : command.getPresets().entrySet()) {
                     if (!command.perPresetPermissions() || sender.hasPermission(command.getPermission() + "." + preset.getKey().toLowerCase())) {
-                        presets.put(preset.getKey(), preset.getValue());
+                        String value = preset.getValue();
+                        if (value.length() > 210) {
+                            value = value.substring(0, 200) + ChatColor.GRAY + "...";
+                        }
+                        presets.put(preset.getKey(), value);
                     }
                 }
                 sender.sendMessage(plugin.getPrefix() + ChatColor.DARK_RED + " Presets for " + ChatColor.WHITE + command.getName() + ChatColor.DARK_RED + ":");
