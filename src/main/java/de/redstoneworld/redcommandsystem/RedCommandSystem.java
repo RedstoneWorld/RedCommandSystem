@@ -8,13 +8,11 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.logging.Level;
 
 public class RedCommandSystem extends JavaPlugin {
 
-    private ConfigAccessor commandsConfig = new ConfigAccessor(this, "commands.yml");;
+    private ConfigAccessor commandsConfig;
     private RedCommandManager rcm;
 
     public void onEnable() {
@@ -33,6 +31,7 @@ public class RedCommandSystem extends JavaPlugin {
         saveDefaultConfig();
         reloadConfig();
 
+        commandsConfig = new ConfigAccessor(this, "commands.yml");
         commandsConfig.saveDefaultConfig();
         commandsConfig.reloadConfig();
 
@@ -48,7 +47,7 @@ public class RedCommandSystem extends JavaPlugin {
                 ConfigurationSection blocks = oldConfig.getConfigurationSection("blocks");
                 if (blocks != null && blocks.getKeys(false).size() > 0) {
                     for (String configName : blocks.getKeys(false)) {
-                        getCommandsConfig().set("blockdata.presets." + configName, blocks.getString(configName));
+                        getCommandsConfig().set("redsetblock.presets." + configName, blocks.getString(configName));
                     }
                     getLogger().log(Level.INFO, "Imported " + blocks.getKeys(false).size() + " block data configs!");
                 }
