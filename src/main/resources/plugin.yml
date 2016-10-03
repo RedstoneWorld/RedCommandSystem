@@ -6,8 +6,8 @@ authors: [Phoenix616]
 commands:
    redcommandsystem:
       aliases: [rcs]
-      description: Command description.
-      usage: /<command> [<x> <y> <z> <name>|position <name>|setpos <x> <y> <z>|list|info <name>|help|reload]
+      description: Main command to manage and reload the plugin.
+      usage: /<command> [list|info <command>|presets|command|help|reload]
       permission: rwm.commandsystem.cmd
       permission-message: You don't have the permission <permission>
 permissions:
