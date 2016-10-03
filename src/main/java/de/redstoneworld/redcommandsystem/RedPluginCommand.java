@@ -111,7 +111,7 @@ public class RedPluginCommand implements CommandExecutor {
     }
 
     private boolean showHelp(CommandSender sender, String label) {
-        sender.sendMessage(plugin.getPrefix() + " Commands:");
+        sender.sendMessage(ChatColor.DARK_RED + plugin.getName() + " Commands:");
         if (sender.hasPermission("rwm.commandsystem.cmd.list")) {
             sender.sendMessage(ChatColor.RED + "/" + label + " list"
                     + ChatColor.GRAY + " List all configured commands");
