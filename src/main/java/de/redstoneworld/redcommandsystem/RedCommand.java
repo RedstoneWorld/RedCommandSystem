@@ -196,14 +196,14 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
 
     private void showHelp(CommandSender sender, String label) {
         sender.sendMessage(plugin.getPrefix() + " Commands:");
-        sender.sendMessage(ChatColor.RED + "/" + label + " " + getSyntax()
-                + ChatColor.GRAY + " Execute a preset at a certain position");
-        sender.sendMessage(ChatColor.RED + "/" + label + " setpos <x> <y> <z>"
-                + ChatColor.GRAY + " Store position to later be used in /" + label + " position <name>. Data is stored until server restart!");
-        sender.sendMessage(ChatColor.RED + "/" + label + " " + getSyntax().replace("<position>", "position")
-                + ChatColor.GRAY + " Execute command preset with stored position");
-        sender.sendMessage(ChatColor.RED + "/" + label + " help"
-                + ChatColor.GRAY + " Show this help");
+        sender.sendMessage(ChatColor.RED + "/" + label + " " + getSyntax().replace("<position>", "<x> <y> <z>"));
+        sender.sendMessage(ChatColor.GRAY + " Execute a preset at a certain position");
+        sender.sendMessage(ChatColor.RED + "/" + label + " setpos <x> <y> <z>");
+        sender.sendMessage(ChatColor.GRAY + " Store position to later be used in /" + label + " position <name>. Data is stored until server restart or plugin reload!");
+        sender.sendMessage(ChatColor.RED + "/" + label + " " + getSyntax().replace("<position>", "position"));
+        sender.sendMessage(ChatColor.GRAY + " Execute command preset with stored position");
+        sender.sendMessage(ChatColor.RED + "/" + label + " help");
+        sender.sendMessage(ChatColor.GRAY + " Show this help");
     }
 
     public String getSyntax() {
