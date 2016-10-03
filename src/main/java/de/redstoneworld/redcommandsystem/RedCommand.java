@@ -97,34 +97,34 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
 
         // Pass the inputted strings directly to the command
         String[] coordsStr = new String[3];
-        int blockDataIndex = -1;
+        int presetIndex = -1;
 
         if (args.length == 4){
             System.arraycopy(args, 0, coordsStr, 0, 3);
-            blockDataIndex = 3;
+            presetIndex = 3;
         }else if (args.length > 1 && ("position".equalsIgnoreCase(args[0]) || "-p".equalsIgnoreCase(args[0]))) {
             coordsStr = getCachedPositions().get(sender.getName());
             if (coordsStr == null) {
                 plugin.sendMessage(sender, "noposition", "command", label);
                 return true;
             }
-            blockDataIndex = 1;
+            presetIndex = 1;
         }
 
-        if (blockDataIndex == -1) {
+        if (presetIndex == -1) {
             showHelp(sender, label);
             return true;
         }
 
         // Get the configured preset string
-        String preset = getPreset(args[blockDataIndex]);
+        String preset = getPreset(args[presetIndex]);
         if (preset == null) {
-            plugin.sendMessage(sender, "presetnotfound", "name", args[blockDataIndex]);
+            plugin.sendMessage(sender, "presetnotfound", "preset", args[presetIndex], "command", getName());
             return true;
         }
 
         if (perPresetPermissions() && !sender.hasPermission(getPermission() + "." + preset.toLowerCase())) {
-            plugin.sendMessage(sender, "nopresetpermission", "name", args[blockDataIndex]);
+            plugin.sendMessage(sender, "nopresetpermission", "preset", args[presetIndex], "command", getName());
             return true;
         }
 
@@ -184,9 +184,9 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
         world.setGameRuleValue("sendCommandFeedback", String.valueOf(!(sender instanceof Player) || showExecuteOutput()));
         // Dispatch the command
         if (plugin.getServer().dispatchCommand(sender, command)) {
-            plugin.sendMessage(sender, "command.success", "command", getName(), "preset", args[blockDataIndex]);
+            plugin.sendMessage(sender, "command.success", "command", getName(), "preset", args[presetIndex]);
         } else {
-            plugin.sendMessage(sender, "command.failure", "command", getName(), "preset", args[blockDataIndex]);
+            plugin.sendMessage(sender, "command.failure", "command", getName(), "preset", args[presetIndex]);
         }
         world.setGameRuleValue("sendCommandFeedback", sendCommandFeedback);
         // Remove permission again
