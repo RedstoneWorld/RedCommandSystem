@@ -68,7 +68,7 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
             return true;
         }
         if (args.length == 0 || args.length == 1 && "help".equalsIgnoreCase(args[0])) {
-            showHelp(sender, label);
+            showHelp(sender);
             return true;
         } else if (args.length == 4 && "setpos".equalsIgnoreCase(args[0])) {
             String[] coordsStr = new String[3];
@@ -112,7 +112,7 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
         }
 
         if (presetIndex == -1) {
-            showHelp(sender, label);
+            showHelp(sender);
             return true;
         }
 
@@ -194,8 +194,8 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
         return true;
     }
 
-    private void showHelp(CommandSender sender, String label) {
-        sender.sendMessage(plugin.getPrefix() + getName() + " Help:");
+    private void showHelp(CommandSender sender) {
+        sender.sendMessage(plugin.getPrefix() + " " + getName() + " Help:");
         sender.sendMessage(ChatColor.RED + "/" + getName() + " " + getSyntax().replace("<position>", "<x> <y> <z>"));
         sender.sendMessage(ChatColor.GRAY + " Execute a preset at a certain position");
         sender.sendMessage(ChatColor.RED + "/" + getName() + " setpos <x> <y> <z>");
