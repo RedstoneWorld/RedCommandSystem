@@ -173,6 +173,9 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
 
         // Build the to be executed command
         String command = plugin.translate(getExecuteCommand(), "preset", preset, "position", coordsStr[0] + " " + coordsStr[1] + " " + coordsStr[2]);
+        if (sender instanceof Player) {
+            command = command.replace("%player%", sender.getName());
+        }
 
         // Temporally add permission to execute blockdata
         PermissionAttachment permAtt = sender.addAttachment(plugin);
