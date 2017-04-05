@@ -9,6 +9,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginIdentifiableCommand;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.PermissionAttachment;
 import org.bukkit.plugin.Plugin;
@@ -30,7 +31,7 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
     private final boolean presetPermissions;
     private final Map<String, String> presets = new LinkedHashMap<>();
 
-    private Map<String, String[]> cachedPositions = new HashMap<>();
+    private Map<String, CachedPosition> cachedPositions = new HashMap<>();
 
     public RedCommand(RedCommandSystem plugin, String name, String syntax, List<String> aliases, String permission, String executeCommand, List<String> executePermissions, boolean presetPermissions, boolean executeOutput) {
         super(name, executeCommand, "/" + name + " " + syntax.replace("<position>", "<x> <y> <z>"), aliases);
@@ -64,35 +65,78 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
 
     public boolean execute(CommandSender sender, String label, String[] args) {
         if (!sender.hasPermission(getPermission())) {
-            sender.sendMessage("You don't have the permission " + getPermission());
+            plugin.sendMessage(sender, "nopermission", "permission", getPermission());
             return true;
         }
         if (args.length == 0 || args.length == 1 && "help".equalsIgnoreCase(args[0])) {
             showHelp(sender);
             return true;
         } else if (args.length == 4 && "setpos".equalsIgnoreCase(args[0])) {
-            String[] coordsStr = new String[3];
+            if (!sender.hasPermission(getPermission() + ".setpos")) {
+                plugin.sendMessage(sender, "nopermission", "permission", getPermission() + ".setpos");
+                return true;
+            }
+
+            // Get the start location for relative coordinates. When run from the console it's 0,0,0
+            String worldName = plugin.getServer().getWorlds().get(0).getName();
+            double[] coordsAbs = {0, 0, 0};
+            float yaw = 0;
+            float pitch = 0;
+            if (sender instanceof Entity) {
+                worldName = ((Entity) sender).getLocation().getWorld().getName();
+                coordsAbs[0] = ((Entity) sender).getLocation().getX();
+                coordsAbs[1] = ((Entity) sender).getLocation().getY();
+                coordsAbs[2] = ((Entity) sender).getLocation().getZ();
+                if (sender instanceof LivingEntity) {
+                    yaw = ((LivingEntity) sender).getEyeLocation().getYaw();
+                    pitch = ((LivingEntity) sender).getEyeLocation().getPitch();
+                } else {
+                    yaw = ((Entity) sender).getLocation().getYaw();
+                    pitch = ((Entity) sender).getLocation().getPitch();
+                }
+            } else if (sender instanceof BlockCommandSender) {
+                worldName = ((BlockCommandSender) sender).getBlock().getWorld().getName();
+                coordsAbs[0] = ((BlockCommandSender) sender).getBlock().getLocation().getX();
+                coordsAbs[1] = ((BlockCommandSender) sender).getBlock().getLocation().getY();
+                coordsAbs[2] = ((BlockCommandSender) sender).getBlock().getLocation().getZ();
+            }
+
             for (int i = 0; i < 3; i++) {
                 String arg = args[i + 1];
                 try {
                     if (arg.startsWith("~")) {
                         String numberStr = arg.substring(1);
                         if (numberStr.length() > 0) {
-                            Double.parseDouble(numberStr.startsWith(".") ? "0" + numberStr : numberStr);
+                            coordsAbs[i] += Double.parseDouble(numberStr.startsWith(".") ? "0" + numberStr : numberStr);
                         }
                     } else {
-                        Double.parseDouble(arg);
+                        coordsAbs[i] = Double.parseDouble(arg);
                     }
-
-                    coordsStr[i] = arg;
                 } catch (NumberFormatException e) {
                     plugin.sendMessage(sender, "invalidnumber", "input", arg);
                     return true;
                 }
             }
-            getCachedPositions().put(sender.getName(), coordsStr);
-            plugin.sendMessage(sender, "cachedposition", "position", coordsStr[0] + " " + coordsStr[1] + " " + coordsStr[2]);
+            cachedPositions.put(sender.getName(), new CachedPosition(worldName, coordsAbs, yaw, pitch));
+            plugin.sendMessage(sender, "cachedposition", "position", coordsAbs[0] + " " + coordsAbs[1] + " " + coordsAbs[2]);
             return true;
+        }
+
+        // Get world the sender is in, console uses the default/first world
+        World world = plugin.getServer().getWorlds().get(0);
+        float yaw = 0;
+        float pitch = 0;
+        if (sender instanceof Entity) {
+            world = ((Entity) sender).getWorld();
+            if (sender instanceof LivingEntity) {
+                yaw = ((LivingEntity) sender).getEyeLocation().getYaw();
+                pitch = ((LivingEntity) sender).getEyeLocation().getPitch();
+            } else {
+                yaw = ((Entity) sender).getLocation().getYaw();
+                pitch = ((Entity) sender).getLocation().getPitch();
+            }
+        } else if (sender instanceof BlockCommandSender) {
+            world = ((BlockCommandSender) sender).getBlock().getWorld();
         }
 
         // Pass the inputted strings directly to the command
@@ -102,12 +146,22 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
         if (args.length == 4){
             System.arraycopy(args, 0, coordsStr, 0, 3);
             presetIndex = 3;
-        }else if (args.length > 1 && ("position".equalsIgnoreCase(args[0]) || "-p".equalsIgnoreCase(args[0]))) {
-            coordsStr = getCachedPositions().get(sender.getName());
-            if (coordsStr == null) {
+        } else if (args.length > 1 && ("position".equalsIgnoreCase(args[0]) || "-p".equalsIgnoreCase(args[0]))) {
+            CachedPosition position = cachedPositions.get(sender.getName());
+            if (position == null) {
                 plugin.sendMessage(sender, "noposition", "command", label);
                 return true;
             }
+            if (!world.getName().equals(position.getWorld()) && !sender.hasPermission(getPermission() + ".position.otherworld")) {
+                plugin.sendMessage(sender, "nopermission", "permission", getPermission() + ".position.otherworld");
+                return true;
+            }
+            world = plugin.getServer().getWorld(position.getWorld());
+            coordsStr[0] = String.valueOf(position.getCoordinates()[0]);
+            coordsStr[1] = String.valueOf(position.getCoordinates()[1]);
+            coordsStr[2] = String.valueOf(position.getCoordinates()[2]);
+            yaw = position.getYaw();
+            pitch = position.getPitch();
             presetIndex = 1;
         }
 
@@ -157,14 +211,6 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
             }
         }
 
-        // Get world the sender is in, console uses the default/first world
-        World world = plugin.getServer().getWorlds().get(0);
-        if (sender instanceof Entity) {
-            world = ((Entity) sender).getWorld();
-        } else if (sender instanceof BlockCommandSender) {
-            world = ((BlockCommandSender) sender).getBlock().getWorld();
-        }
-
         // Make sure chunk is loaded but don't generate it
         Location loc = new Location(world, coordsAbs[0], coordsAbs[1], coordsAbs[2]);
         if (!loc.getChunk().isLoaded()) {
@@ -172,7 +218,18 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
         }
 
         // Build the to be executed command
-        String command = plugin.translate(getExecuteCommand(), "preset", preset, "position", coordsStr[0] + " " + coordsStr[1] + " " + coordsStr[2]);
+        String command = plugin.translate(getExecuteCommand(),
+                "preset", preset,
+                "position", coordsStr[0] + " " + coordsStr[1] + " " + coordsStr[2],
+                "world", world.getName(),
+                "x", coordsStr[0],
+                "y", coordsStr[1],
+                "z", coordsStr[2],
+                "yaw", String.valueOf(Math.floor(yaw)),
+                "pitch", String.valueOf(Math.floor(pitch)),
+                "exactyaw", String.valueOf(yaw),
+                "exactpitch", String.valueOf(pitch)
+        );
         if (sender instanceof Player) {
             command = command.replace("%player%", sender.getName());
         }
@@ -237,7 +294,7 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
         return presets;
     }
 
-    public Map<String, String[]> getCachedPositions() {
+    public Map<String, CachedPosition> getCachedPositions() {
         return cachedPositions;
     }
 
