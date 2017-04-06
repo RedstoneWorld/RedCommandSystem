@@ -124,24 +124,28 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
 
         // Get world the sender is in, console uses the default/first world
         World world = plugin.getServer().getWorlds().get(0);
-        float yaw = 0;
-        float pitch = 0;
+        float senderYaw = 0;
+        float senderPitch = 0;
         if (sender instanceof Entity) {
             world = ((Entity) sender).getWorld();
             if (sender instanceof LivingEntity) {
-                yaw = ((LivingEntity) sender).getEyeLocation().getYaw();
-                pitch = ((LivingEntity) sender).getEyeLocation().getPitch();
+                senderYaw = ((LivingEntity) sender).getEyeLocation().getYaw();
+                senderPitch = ((LivingEntity) sender).getEyeLocation().getPitch();
             } else {
-                yaw = ((Entity) sender).getLocation().getYaw();
-                pitch = ((Entity) sender).getLocation().getPitch();
+                senderYaw = ((Entity) sender).getLocation().getYaw();
+                senderPitch = ((Entity) sender).getLocation().getPitch();
             }
         } else if (sender instanceof BlockCommandSender) {
             world = ((BlockCommandSender) sender).getBlock().getWorld();
         }
+        String senderWorld = world.getName();
 
         // Pass the inputted strings directly to the command
         String[] coordsStr = new String[3];
         int presetIndex = -1;
+
+        float posYaw = senderYaw;
+        float posPitch = senderPitch;
 
         if (args.length == 4){
             System.arraycopy(args, 0, coordsStr, 0, 3);
@@ -160,8 +164,8 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
             coordsStr[0] = String.valueOf(position.getCoordinates()[0]);
             coordsStr[1] = String.valueOf(position.getCoordinates()[1]);
             coordsStr[2] = String.valueOf(position.getCoordinates()[2]);
-            yaw = position.getYaw();
-            pitch = position.getPitch();
+            posYaw = position.getYaw();
+            posPitch = position.getPitch();
             presetIndex = 1;
         }
 
@@ -183,27 +187,28 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
         }
 
         // Get the start location for relative coordinates. When run from the console it's 0,0,0
-        double[] coordsAbs = {0, 0, 0};
+        double[] senderCoords = {0, 0, 0};
         if (sender instanceof Entity) {
-            coordsAbs[0] = ((Entity) sender).getLocation().getX();
-            coordsAbs[1] = ((Entity) sender).getLocation().getY();
-            coordsAbs[2] = ((Entity) sender).getLocation().getZ();
+            senderCoords[0] = ((Entity) sender).getLocation().getX();
+            senderCoords[1] = ((Entity) sender).getLocation().getY();
+            senderCoords[2] = ((Entity) sender).getLocation().getZ();
         } else if (sender instanceof BlockCommandSender) {
-            coordsAbs[0] = ((BlockCommandSender) sender).getBlock().getLocation().getX();
-            coordsAbs[1] = ((BlockCommandSender) sender).getBlock().getLocation().getY();
-            coordsAbs[2] = ((BlockCommandSender) sender).getBlock().getLocation().getZ();
+            senderCoords[0] = ((BlockCommandSender) sender).getBlock().getLocation().getX();
+            senderCoords[1] = ((BlockCommandSender) sender).getBlock().getLocation().getY();
+            senderCoords[2] = ((BlockCommandSender) sender).getBlock().getLocation().getZ();
         }
 
+        double[] targetCoords = new double[3];
         // Parse the position strings to generate a location later on and check if they are valid beforehand
         for (int i = 0; i < 3; i++) {
             try {
                 if (coordsStr[i].startsWith("~")) {
                     String numberStr = coordsStr[i].substring(1);
                     if (numberStr.length() > 0) {
-                        coordsAbs[i] += Double.parseDouble(numberStr.startsWith(".") ? "0" + numberStr : numberStr);
+                        targetCoords[i] = senderCoords[i] + Double.parseDouble(numberStr.startsWith(".") ? "0" + numberStr : numberStr);
                     }
                 } else {
-                    coordsAbs[i] = Double.parseDouble(coordsStr[i]);
+                    targetCoords[i] = Double.parseDouble(coordsStr[i]);
                 }
             } catch (NumberFormatException e) {
                 plugin.sendMessage(sender, "invalidnumber", "input", coordsStr[i]);
@@ -212,7 +217,7 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
         }
 
         // Make sure chunk is loaded but don't generate it
-        Location loc = new Location(world, coordsAbs[0], coordsAbs[1], coordsAbs[2]);
+        Location loc = new Location(world, targetCoords[0], targetCoords[1], targetCoords[2]);
         if (!loc.getChunk().isLoaded()) {
             loc.getChunk().load(false);
         }
@@ -225,10 +230,19 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
                 "x", coordsStr[0],
                 "y", coordsStr[1],
                 "z", coordsStr[2],
-                "yaw", String.valueOf(Math.floor(yaw)),
-                "pitch", String.valueOf(Math.floor(pitch)),
-                "exactyaw", String.valueOf(yaw),
-                "exactpitch", String.valueOf(pitch)
+                "yaw", String.valueOf(Math.floor(posYaw)),
+                "pitch", String.valueOf(Math.floor(posPitch)),
+                "exactyaw", String.valueOf(posYaw),
+                "exactpitch", String.valueOf(posPitch),
+                "senderworld", senderWorld,
+                "senderx", String.valueOf(senderCoords[0]),
+                "sendery", String.valueOf(senderCoords[1]),
+                "senderz", String.valueOf(senderCoords[2]),
+                "senderyaw", String.valueOf(Math.floor(senderYaw)),
+                "senderpitch", String.valueOf(Math.floor(senderPitch)),
+                "senderexactyaw", String.valueOf(senderYaw),
+                "senderexactpitch", String.valueOf(senderPitch),
+                "sender", sender.getName()
         );
         if (sender instanceof Player) {
             command = command.replace("%player%", sender.getName());
