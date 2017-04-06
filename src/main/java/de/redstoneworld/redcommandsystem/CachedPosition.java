@@ -23,12 +23,14 @@ package de.redstoneworld.redcommandsystem;
 public class CachedPosition {
     private final String world;
     private final double[] coordinates;
+    private final String[] coordinateInput;
     private final float yaw;
     private final float pitch;
 
-    public CachedPosition(String world, double[] coordinates, float yaw, float pitch) {
+    public CachedPosition(String world, double[] coordinates, String[] coordinateInput, float yaw, float pitch) {
         this.world = world;
         this.coordinates = coordinates;
+        this.coordinateInput = coordinateInput;
         this.yaw = yaw;
         this.pitch = pitch;
     }
@@ -47,5 +49,9 @@ public class CachedPosition {
 
     public float getPitch() {
         return pitch;
+    }
+
+    public String[] getCoordinateInput() {
+        return coordinateInput;
     }
 }

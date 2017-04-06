@@ -14,6 +14,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.permissions.PermissionAttachment;
 import org.bukkit.plugin.Plugin;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -79,14 +80,14 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
 
             // Get the start location for relative coordinates. When run from the console it's 0,0,0
             String worldName = plugin.getServer().getWorlds().get(0).getName();
-            double[] coordsAbs = {0, 0, 0};
+            double[] senderCoords = {0, 0, 0};
             float yaw = 0;
             float pitch = 0;
             if (sender instanceof Entity) {
                 worldName = ((Entity) sender).getLocation().getWorld().getName();
-                coordsAbs[0] = ((Entity) sender).getLocation().getX();
-                coordsAbs[1] = ((Entity) sender).getLocation().getY();
-                coordsAbs[2] = ((Entity) sender).getLocation().getZ();
+                senderCoords[0] = ((Entity) sender).getLocation().getX();
+                senderCoords[1] = ((Entity) sender).getLocation().getY();
+                senderCoords[2] = ((Entity) sender).getLocation().getZ();
                 if (sender instanceof LivingEntity) {
                     yaw = ((LivingEntity) sender).getEyeLocation().getYaw();
                     pitch = ((LivingEntity) sender).getEyeLocation().getPitch();
@@ -96,9 +97,9 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
                 }
             } else if (sender instanceof BlockCommandSender) {
                 worldName = ((BlockCommandSender) sender).getBlock().getWorld().getName();
-                coordsAbs[0] = ((BlockCommandSender) sender).getBlock().getLocation().getX();
-                coordsAbs[1] = ((BlockCommandSender) sender).getBlock().getLocation().getY();
-                coordsAbs[2] = ((BlockCommandSender) sender).getBlock().getLocation().getZ();
+                senderCoords[0] = ((BlockCommandSender) sender).getBlock().getLocation().getX();
+                senderCoords[1] = ((BlockCommandSender) sender).getBlock().getLocation().getY();
+                senderCoords[2] = ((BlockCommandSender) sender).getBlock().getLocation().getZ();
             }
 
             for (int i = 0; i < 3; i++) {
@@ -107,18 +108,18 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
                     if (arg.startsWith("~")) {
                         String numberStr = arg.substring(1);
                         if (numberStr.length() > 0) {
-                            coordsAbs[i] += Double.parseDouble(numberStr.startsWith(".") ? "0" + numberStr : numberStr);
+                            Double.parseDouble(numberStr.startsWith(".") ? "0" + numberStr : numberStr);
                         }
                     } else {
-                        coordsAbs[i] = Double.parseDouble(arg);
+                        Double.parseDouble(arg);
                     }
                 } catch (NumberFormatException e) {
                     plugin.sendMessage(sender, "invalidnumber", "input", arg);
                     return true;
                 }
             }
-            cachedPositions.put(sender.getName(), new CachedPosition(worldName, coordsAbs, yaw, pitch));
-            plugin.sendMessage(sender, "cachedposition", "position", coordsAbs[0] + " " + coordsAbs[1] + " " + coordsAbs[2]);
+            cachedPositions.put(sender.getName(), new CachedPosition(worldName, senderCoords, Arrays.copyOfRange(args, 1, 4), yaw, pitch));
+            plugin.sendMessage(sender, "cachedposition", "position", args[0] + " " + args[1] + " " + args[2]);
             return true;
         }
 
@@ -147,8 +148,22 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
         float posYaw = senderYaw;
         float posPitch = senderPitch;
 
+        // Get the start location for relative coordinates. When run from the console it's 0,0,0
+        double[] senderCoords = {0, 0, 0};
+        if (sender instanceof Entity) {
+            senderCoords[0] = ((Entity) sender).getLocation().getX();
+            senderCoords[1] = ((Entity) sender).getLocation().getY();
+            senderCoords[2] = ((Entity) sender).getLocation().getZ();
+        } else if (sender instanceof BlockCommandSender) {
+            senderCoords[0] = ((BlockCommandSender) sender).getBlock().getLocation().getX();
+            senderCoords[1] = ((BlockCommandSender) sender).getBlock().getLocation().getY();
+            senderCoords[2] = ((BlockCommandSender) sender).getBlock().getLocation().getZ();
+        }
+
+        double[] originalSenderCoords = Arrays.copyOf(senderCoords, 3);
+
         if (args.length == 4){
-            System.arraycopy(args, 0, coordsStr, 0, 3);
+            coordsStr = Arrays.copyOf(args, 3);
             presetIndex = 3;
         } else if (args.length > 1 && ("position".equalsIgnoreCase(args[0]) || "-p".equalsIgnoreCase(args[0]))) {
             CachedPosition position = cachedPositions.get(sender.getName());
@@ -160,10 +175,11 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
                 plugin.sendMessage(sender, "nopermission", "permission", getPermission() + ".position.otherworld");
                 return true;
             }
+            originalSenderCoords = position.getCoordinates();
             world = plugin.getServer().getWorld(position.getWorld());
-            coordsStr[0] = String.valueOf(position.getCoordinates()[0]);
-            coordsStr[1] = String.valueOf(position.getCoordinates()[1]);
-            coordsStr[2] = String.valueOf(position.getCoordinates()[2]);
+            coordsStr[0] = String.valueOf(position.getCoordinateInput()[0]);
+            coordsStr[1] = String.valueOf(position.getCoordinateInput()[1]);
+            coordsStr[2] = String.valueOf(position.getCoordinateInput()[2]);
             posYaw = position.getYaw();
             posPitch = position.getPitch();
             presetIndex = 1;
@@ -184,18 +200,6 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
         if (perPresetPermissions() && !sender.hasPermission(getPermission() + "." + preset.toLowerCase())) {
             plugin.sendMessage(sender, "nopresetpermission", "preset", args[presetIndex], "command", getName());
             return true;
-        }
-
-        // Get the start location for relative coordinates. When run from the console it's 0,0,0
-        double[] senderCoords = {0, 0, 0};
-        if (sender instanceof Entity) {
-            senderCoords[0] = ((Entity) sender).getLocation().getX();
-            senderCoords[1] = ((Entity) sender).getLocation().getY();
-            senderCoords[2] = ((Entity) sender).getLocation().getZ();
-        } else if (sender instanceof BlockCommandSender) {
-            senderCoords[0] = ((BlockCommandSender) sender).getBlock().getLocation().getX();
-            senderCoords[1] = ((BlockCommandSender) sender).getBlock().getLocation().getY();
-            senderCoords[2] = ((BlockCommandSender) sender).getBlock().getLocation().getZ();
         }
 
         double[] targetCoords = new double[3];
@@ -226,6 +230,12 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
         String command = plugin.translate(getExecuteCommand(),
                 "preset", preset,
                 "position", coordsStr[0] + " " + coordsStr[1] + " " + coordsStr[2],
+                "possenderx", String.valueOf(Math.floor(originalSenderCoords[0])),
+                "possendery", String.valueOf(Math.floor(originalSenderCoords[1])),
+                "possenderz", String.valueOf(Math.floor(originalSenderCoords[2])),
+                "possenderexactx", String.valueOf(originalSenderCoords[0]),
+                "possenderexacty", String.valueOf(originalSenderCoords[1]),
+                "possenderexactz", String.valueOf(originalSenderCoords[2]),
                 "world", world.getName(),
                 "x", String.valueOf(Math.floor(targetCoords[0])),
                 "y", String.valueOf(Math.floor(targetCoords[1])),
