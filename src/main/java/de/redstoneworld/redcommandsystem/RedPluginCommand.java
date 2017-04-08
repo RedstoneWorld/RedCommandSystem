@@ -64,26 +64,31 @@ public class RedPluginCommand implements CommandExecutor {
                 }
                 sender.sendMessage(ChatColor.RED + " Syntax: " + ChatColor.WHITE + command.getSyntax());
                 sender.sendMessage(ChatColor.RED + " Permission: " + ChatColor.WHITE + command.getPermission());
-                if (command.getWrongWorldCommands().size() > 0) {
+                if (command.getWrongWorld().getCommands().size() > 0) {
                     sender.sendMessage(ChatColor.RED + " Wrong world commands: ");
-                    for (String wrongWorldCommand : command.getWrongWorldCommands()) {
+                    for (String wrongWorldCommand : command.getWrongWorld().getCommands()) {
                         sender.sendMessage(ChatColor.WHITE + "  " + wrongWorldCommand);
+                    }
+                    sender.sendMessage(ChatColor.RED + " Show command output: " + ChatColor.WHITE + command.getWrongWorld().showOutput());
+                    sender.sendMessage(ChatColor.RED + " Execute with the following additional permissions:");
+                    for (String perm : command.getWrongWorld().getPermissions()) {
+                        sender.sendMessage(ChatColor.RED + " > " + ChatColor.WHITE + perm);
                     }
                 }
                 sender.sendMessage(ChatColor.RED + " Commands to be executed: ");
-                if (command.getWrongWorldCommands().size() > 0) {
-                    for (String executeCommand : command.getExecuteCommands()) {
+                if (command.getExecute().getCommands().size() > 0) {
+                    for (String executeCommand : command.getExecute().getCommands()) {
                         sender.sendMessage(ChatColor.WHITE + "  " + executeCommand);
                     }
                 } else {
                     sender.sendMessage(ChatColor.WHITE + "  None?");
                 }
-                sender.sendMessage(ChatColor.RED + " Show command output: " + ChatColor.WHITE + command.showExecuteOutput());
+                sender.sendMessage(ChatColor.RED + " Show command output: " + ChatColor.WHITE + command.getExecute().showOutput());
                 sender.sendMessage(ChatColor.RED + " Execute with the following additional permissions:");
-                for (String perm : command.getExecutePermissions()) {
+                for (String perm : command.getExecute().getPermissions()) {
                     sender.sendMessage(ChatColor.RED + " > " + ChatColor.WHITE + perm);
                 }
-                if (command.getExecutePermissions().size() == 0) {
+                if (command.getExecute().getPermissions().isEmpty()) {
                     sender.sendMessage(ChatColor.WHITE + " Only uses the player's permissions and no special ones!");
                 }
                 sender.sendMessage(ChatColor.RED + " Check permissions for each preset (" + command.getPermission() + ".<name>): " + ChatColor.WHITE + command.perPresetPermissions());
