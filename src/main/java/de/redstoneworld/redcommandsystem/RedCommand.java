@@ -25,21 +25,23 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
 
     private final String syntax;
 
-    private final String executeCommand;
+    private final List<String> executeCommands;
     private final boolean executeOutput;
     private final List<String> executePermissions;
+    private final List<String> wrongWorldCommands;
 
     private final boolean presetPermissions;
     private final Map<String, String> presets = new LinkedHashMap<>();
 
     private Map<String, CachedPosition> cachedPositions = new HashMap<>();
 
-    public RedCommand(RedCommandSystem plugin, String name, String syntax, List<String> aliases, String permission, String executeCommand, List<String> executePermissions, boolean presetPermissions, boolean executeOutput) {
-        super(name, executeCommand, "/" + name + " " + syntax.replace("<position>", "<x> <y> <z>"), aliases);
+    public RedCommand(RedCommandSystem plugin, String name, String syntax, List<String> aliases, String permission, List<String> executeCommands, List<String> executePermissions, List<String> wrongWorldCommands, boolean executeOutput, boolean presetPermissions) {
+        super(name, plugin.getName() + " command: " + name, "/" + name + " " + syntax.replace("<position>", "<x> <y> <z>"), aliases);
         this.plugin = plugin;
         this.syntax = syntax;
+        this.wrongWorldCommands = wrongWorldCommands;
         this.setPermission(permission);
-        this.executeCommand = executeCommand;
+        this.executeCommands = executeCommands;
         this.executeOutput = executeOutput;
         this.executePermissions = executePermissions;
         this.presetPermissions = presetPermissions;
@@ -51,17 +53,19 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
     }
 
     public RedCommand(RedCommandSystem plugin, ConfigurationSection section) {
-        this(
-                plugin,
-                section.getName(),
-                section.getString("syntax"),
-                section.getStringList("aliases"),
-                section.getString("permission"),
-                section.getString("execute.command"),
-                section.getStringList("execute.permissions"),
-                section.getBoolean("presetpermissions"),
-                section.getBoolean("execute.output")
-        );
+        super(section.getName(), plugin.getName() + " command: " + section.getName(), "/" + section.getName() + " " + section.getString("syntax").replace("<position>", "<x> <y> <z>"), section.getStringList("aliases"));
+        this.plugin = plugin;
+        this.syntax = section.getString("syntax");
+        this.setPermission(section.getString("permission"));
+        List<String> executeCommands = section.getStringList("execute.commands");
+        if (section.contains("execute.command")) {
+            executeCommands.add(section.getString("execute.command"));
+        }
+        this.executeCommands = executeCommands;
+        this.executeOutput = section.getBoolean("execute.output");
+        this.executePermissions = section.getStringList("execute.permissions");
+        this.presetPermissions = section.getBoolean("presetpermissions");
+        this.wrongWorldCommands = section.getStringList("wrong-world-commands");
     }
 
     public boolean execute(CommandSender sender, String label, String[] args) {
@@ -160,36 +164,6 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
             senderCoords[2] = ((BlockCommandSender) sender).getBlock().getLocation().getZ();
         }
 
-        double[] originalSenderCoords = Arrays.copyOf(senderCoords, 3);
-
-        if (args.length == 4){
-            coordsStr = Arrays.copyOf(args, 3);
-            presetIndex = 3;
-        } else if (args.length > 1 && ("position".equalsIgnoreCase(args[0]) || "-p".equalsIgnoreCase(args[0]))) {
-            CachedPosition position = cachedPositions.get(sender.getName());
-            if (position == null) {
-                plugin.sendMessage(sender, "noposition", "command", label);
-                return true;
-            }
-            if (!world.getName().equals(position.getWorld()) && !sender.hasPermission(getPermission() + ".position.otherworld")) {
-                plugin.sendMessage(sender, "nopermission", "permission", getPermission() + ".position.otherworld");
-                return true;
-            }
-            originalSenderCoords = position.getCoordinates();
-            world = plugin.getServer().getWorld(position.getWorld());
-            coordsStr[0] = String.valueOf(position.getCoordinateInput()[0]);
-            coordsStr[1] = String.valueOf(position.getCoordinateInput()[1]);
-            coordsStr[2] = String.valueOf(position.getCoordinateInput()[2]);
-            posYaw = position.getYaw();
-            posPitch = position.getPitch();
-            presetIndex = 1;
-        }
-
-        if (presetIndex == -1) {
-            showHelp(sender);
-            return true;
-        }
-
         // Get the configured preset string
         String preset = getPreset(args[presetIndex]);
         if (preset == null) {
@@ -220,14 +194,109 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
             }
         }
 
+        double[] originalSenderCoords = Arrays.copyOf(senderCoords, 3);
+
+        if (args.length == 4) {
+            coordsStr = Arrays.copyOf(args, 3);
+            presetIndex = 3;
+        } else if (args.length > 1 && ("position".equalsIgnoreCase(args[0]) || "-p".equalsIgnoreCase(args[0]))) {
+            CachedPosition position = cachedPositions.get(sender.getName());
+            if (position == null) {
+                plugin.sendMessage(sender, "noposition", "command", label);
+                return true;
+            }
+            if (!world.getName().equals(position.getWorld()) && !sender.hasPermission(getPermission() + ".position.otherworld")) {
+                if (getWrongWorldCommands().isEmpty()) {
+                    plugin.sendMessage(sender, "nopermission", "permission", getPermission() + ".position.otherworld");
+                } else {
+                    // Temporally add permission to execute commands
+                    PermissionAttachment permAtt = sender.addAttachment(plugin);
+                    try {
+                        permAtt.setPermission("*", true);
+
+                        String sendCommandFeedback = world.getGameRuleValue("sendCommandFeedback");
+                        world.setGameRuleValue("sendCommandFeedback", String.valueOf(!(sender instanceof Player)));
+                        // Dispatch the command
+                        for (String command : getWrongWorldCommands()) {
+                            plugin.getServer().dispatchCommand(sender, command);
+                        }
+                        world.setGameRuleValue("sendCommandFeedback", sendCommandFeedback);
+                        // Remove permission again
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    } finally {
+                        permAtt.remove();
+                    }
+                }
+                return true;
+            }
+            originalSenderCoords = position.getCoordinates();
+            world = plugin.getServer().getWorld(position.getWorld());
+            coordsStr[0] = String.valueOf(position.getCoordinateInput()[0]);
+            coordsStr[1] = String.valueOf(position.getCoordinateInput()[1]);
+            coordsStr[2] = String.valueOf(position.getCoordinateInput()[2]);
+            posYaw = position.getYaw();
+            posPitch = position.getPitch();
+            presetIndex = 1;
+        }
+
+        if (presetIndex == -1) {
+            showHelp(sender);
+            return true;
+        }
+
         // Make sure chunk is loaded but don't generate it
         Location loc = new Location(world, targetCoords[0], targetCoords[1], targetCoords[2]);
         if (!loc.getChunk().isLoaded()) {
             loc.getChunk().load(false);
         }
 
-        // Build the to be executed command
-        String command = plugin.translate(getExecuteCommand(),
+        // Temporally add permission to execute blockdata
+        PermissionAttachment permAtt = sender.addAttachment(plugin);
+        try {
+            for (String perm : getExecutePermissions()) {
+                permAtt.setPermission(perm, !perm.startsWith("-"));
+            }
+
+            String sendCommandFeedback = world.getGameRuleValue("sendCommandFeedback");
+            world.setGameRuleValue("sendCommandFeedback", String.valueOf(!(sender instanceof Player) || showExecuteOutput()));
+            // Dispatch the commands
+            boolean success = true;
+            for (String command : getExecuteCommands()) {
+                // Build the to be executed command
+                command = addVariables(command,
+                        sender,
+                        preset,
+                        coordsStr,
+                        originalSenderCoords,
+                        world.getName(),
+                        targetCoords,
+                        posYaw,
+                        posPitch,
+                        senderWorld,
+                        senderCoords,
+                        senderYaw,
+                        senderPitch
+                );
+                success &= plugin.getServer().dispatchCommand(sender, command);
+            }
+            if (success) {
+                plugin.sendMessage(sender, "command.success", "command", getName(), "preset", args[presetIndex]);
+            } else {
+                plugin.sendMessage(sender, "command.failure", "command", getName(), "preset", args[presetIndex]);
+            }
+            world.setGameRuleValue("sendCommandFeedback", sendCommandFeedback);
+            // Remove permission again
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            permAtt.remove();
+        }
+        return true;
+    }
+
+    private String addVariables(String command, CommandSender sender, String preset, String[] coordsStr, double[] originalSenderCoords, String worldName, double[] targetCoords, float posYaw, float posPitch, String senderWorld, double[] senderCoords, float senderYaw, float senderPitch) {
+        command = plugin.translate(command,
                 "preset", preset,
                 "position", coordsStr[0] + " " + coordsStr[1] + " " + coordsStr[2],
                 "possenderx", String.valueOf(Math.floor(originalSenderCoords[0])),
@@ -236,7 +305,7 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
                 "possenderexactx", String.valueOf(originalSenderCoords[0]),
                 "possenderexacty", String.valueOf(originalSenderCoords[1]),
                 "possenderexactz", String.valueOf(originalSenderCoords[2]),
-                "world", world.getName(),
+                "world", worldName,
                 "x", String.valueOf(Math.floor(targetCoords[0])),
                 "y", String.valueOf(Math.floor(targetCoords[1])),
                 "z", String.valueOf(Math.floor(targetCoords[2])),
@@ -261,27 +330,9 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
                 "sender", sender.getName()
         );
         if (sender instanceof Player) {
-            command = command.replace("%player%", sender.getName());
+            command = plugin.translate(command, "player", sender.getName());
         }
-
-        // Temporally add permission to execute blockdata
-        PermissionAttachment permAtt = sender.addAttachment(plugin);
-        for (String perm : getExecutePermissions()) {
-            permAtt.setPermission(perm, !perm.startsWith("-"));
-        }
-
-        String sendCommandFeedback = world.getGameRuleValue("sendCommandFeedback");
-        world.setGameRuleValue("sendCommandFeedback", String.valueOf(!(sender instanceof Player) || showExecuteOutput()));
-        // Dispatch the command
-        if (plugin.getServer().dispatchCommand(sender, command)) {
-            plugin.sendMessage(sender, "command.success", "command", getName(), "preset", args[presetIndex]);
-        } else {
-            plugin.sendMessage(sender, "command.failure", "command", getName(), "preset", args[presetIndex]);
-        }
-        world.setGameRuleValue("sendCommandFeedback", sendCommandFeedback);
-        // Remove permission again
-        permAtt.remove();
-        return true;
+        return command;
     }
 
     private void showHelp(CommandSender sender) {
@@ -300,8 +351,8 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
         return syntax;
     }
 
-    public String getExecuteCommand() {
-        return executeCommand;
+    public List<String> getExecuteCommands() {
+        return executeCommands;
     }
 
     public boolean showExecuteOutput() {
@@ -330,6 +381,10 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
 
     private void addPreset(String name, String preset) {
         presets.put(name.toLowerCase(), preset);
+    }
+
+    public List<String> getWrongWorldCommands() {
+        return wrongWorldCommands;
     }
 
     @Override

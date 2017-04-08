@@ -6,7 +6,6 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,7 +64,20 @@ public class RedPluginCommand implements CommandExecutor {
                 }
                 sender.sendMessage(ChatColor.RED + " Syntax: " + ChatColor.WHITE + command.getSyntax());
                 sender.sendMessage(ChatColor.RED + " Permission: " + ChatColor.WHITE + command.getPermission());
-                sender.sendMessage(ChatColor.RED + " Command to be executed: " + ChatColor.WHITE + command.getExecuteCommand());
+                if (command.getWrongWorldCommands().size() > 0) {
+                    sender.sendMessage(ChatColor.RED + " Wrong world commands: ");
+                    for (String wrongWorldCommand : command.getWrongWorldCommands()) {
+                        sender.sendMessage(ChatColor.WHITE + "  " + wrongWorldCommand);
+                    }
+                }
+                sender.sendMessage(ChatColor.RED + " Commands to be executed: ");
+                if (command.getWrongWorldCommands().size() > 0) {
+                    for (String executeCommand : command.getExecuteCommands()) {
+                        sender.sendMessage(ChatColor.WHITE + "  " + executeCommand);
+                    }
+                } else {
+                    sender.sendMessage(ChatColor.WHITE + "  None?");
+                }
                 sender.sendMessage(ChatColor.RED + " Show command output: " + ChatColor.WHITE + command.showExecuteOutput());
                 sender.sendMessage(ChatColor.RED + " Execute with the following additional permissions:");
                 for (String perm : command.getExecutePermissions()) {

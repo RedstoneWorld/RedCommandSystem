@@ -3,9 +3,12 @@ redsetblock:
   aliases:
   - rsb
   - rsetblock
+  wrong-world-commands:
+  - 'tellraw %player% {"text":"Du bist nichtmehr in der selben Welt!","color":"red"}'
   permission: rwm.setblock.cmd
   execute:
-    command: "blockdata %position% %preset%"
+    commands:
+    - "blockdata %position% %preset%"
     output: false
     permissions:
     - minecraft.command.blockdata
