@@ -6,7 +6,7 @@ messages:
   commandnotfound: "&f%name&c does not exist in the commands config?"
   nopresetpermission: "&cYou don't have the permission to use the preset &f%preset%&c of &f%command%&c!"
   presetnotfound: "&cPreset &f%preset%&c does not exist in the config of &f%command%&c?"
-  nopermission: "&cYou don't have the permission &f%permission&"
+  nopermission: "&cYou don't have the permission &f%permission%"
   command:
     success: "&eExecuted &f%command%&e with preset &f%preset%&e!"
     failure: "&cFailed to execute &f%command%&c with preset &f%preset%&c!"
