@@ -60,8 +60,12 @@ public class RedCommandSystem extends JavaPlugin {
         }
 
         for (String key : getCommandsConfig().getKeys(false)) {
-            RedCommand command = new RedCommand(this, getCommandsConfig().getConfigurationSection(key));
-            rcm.register(command);
+            try {
+                RedCommand command = new RedCommand(this, getCommandsConfig().getConfigurationSection(key));
+                rcm.register(command);
+            } catch (IllegalArgumentException e) {
+                getLogger().log(Level.SEVERE, "Command " + key + " is not configured right! " + e.getMessage());
+            }
         }
 
         return true;

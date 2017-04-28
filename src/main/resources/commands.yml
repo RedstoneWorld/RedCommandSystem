@@ -25,6 +25,12 @@ redsummon:
   aliases:
   - rsummon
   permission: rwm.summon.cmd
+  wrong-world:
+    commands:
+    - 'tellraw %player% {"text":"Du bist nichtmehr in der selben Welt!","color":"red"}'
+    output: false
+    permissions:
+    - minecraft.command.tellraw
   execute:
     command: "summon %preset%"
     output: false

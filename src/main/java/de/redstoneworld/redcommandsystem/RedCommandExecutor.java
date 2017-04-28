@@ -19,7 +19,10 @@ public class RedCommandExecutor {
     private final boolean output;
     private final List<String> permissions;
 
-    public RedCommandExecutor(RedCommandSystem plugin, ConfigurationSection config) {
+    public RedCommandExecutor(RedCommandSystem plugin, ConfigurationSection config) throws IllegalArgumentException {
+        if (config == null) {
+            throw new IllegalArgumentException("Config section is null?");
+        }
         this.plugin = plugin;
         List<String> commands = config.getStringList("commands");
         if (config.contains("command")) {

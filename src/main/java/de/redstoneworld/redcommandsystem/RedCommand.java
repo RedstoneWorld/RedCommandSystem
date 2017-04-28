@@ -45,7 +45,7 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
         }
     }
 
-    public RedCommand(RedCommandSystem plugin, ConfigurationSection section) {
+    public RedCommand(RedCommandSystem plugin, ConfigurationSection section) throws IllegalArgumentException {
         this(
                 plugin,
                 section.getName(),
