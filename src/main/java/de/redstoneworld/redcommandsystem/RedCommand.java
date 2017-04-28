@@ -208,7 +208,7 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
             return true;
         }
 
-        if (perPresetPermissions() && !sender.hasPermission(getPermission() + "." + preset.toLowerCase())) {
+        if (perPresetPermissions() && !sender.hasPermission(getPermission() + "." + args[presetIndex].toLowerCase())) {
             plugin.sendMessage(sender, "nopresetpermission", "preset", args[presetIndex], "command", getName());
             return true;
         }
