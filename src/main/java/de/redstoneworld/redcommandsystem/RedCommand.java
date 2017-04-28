@@ -153,18 +153,6 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
             senderCoords[2] = ((BlockCommandSender) sender).getBlock().getLocation().getZ();
         }
 
-        // Get the configured preset string
-        String preset = getPreset(args[presetIndex]);
-        if (preset == null) {
-            plugin.sendMessage(sender, "presetnotfound", "preset", args[presetIndex], "command", getName());
-            return true;
-        }
-
-        if (perPresetPermissions() && !sender.hasPermission(getPermission() + "." + preset.toLowerCase())) {
-            plugin.sendMessage(sender, "nopresetpermission", "preset", args[presetIndex], "command", getName());
-            return true;
-        }
-
         double[] targetCoords = new double[3];
         // Parse the position strings to generate a location later on and check if they are valid beforehand
         for (int i = 0; i < 3; i++) {
@@ -200,7 +188,7 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
                 } else {
                     getWrongWorld().execute(
                             sender,
-                            preset,
+                            args[1],
                             coordsStr,
                             originalSenderCoords,
                             position.getWorld(),
@@ -226,6 +214,18 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
 
         if (presetIndex == -1) {
             showHelp(sender);
+            return true;
+        }
+
+        // Get the configured preset string
+        String preset = getPreset(args[presetIndex]);
+        if (preset == null) {
+            plugin.sendMessage(sender, "presetnotfound", "preset", args[presetIndex], "command", getName());
+            return true;
+        }
+
+        if (perPresetPermissions() && !sender.hasPermission(getPermission() + "." + preset.toLowerCase())) {
+            plugin.sendMessage(sender, "nopresetpermission", "preset", args[presetIndex], "command", getName());
             return true;
         }
 
