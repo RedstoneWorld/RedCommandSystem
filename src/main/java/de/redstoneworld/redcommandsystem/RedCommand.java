@@ -134,9 +134,6 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
             world = ((BlockCommandSender) sender).getBlock().getWorld();
         }
 
-        // Pass the inputted strings directly to the command
-        String[] coordsStr = new String[3];
-        int presetIndex = -1;
 
         float posYaw = senderYaw;
         float posPitch = senderPitch;
@@ -151,6 +148,69 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
             senderCoords[0] = ((BlockCommandSender) sender).getBlock().getLocation().getX();
             senderCoords[1] = ((BlockCommandSender) sender).getBlock().getLocation().getY();
             senderCoords[2] = ((BlockCommandSender) sender).getBlock().getLocation().getZ();
+        }
+
+        // Pass the inputted strings directly to the command
+        String[] coordsStr = new String[3];
+
+        double[] originalSenderCoords = Arrays.copyOf(senderCoords, 3);
+
+        int presetIndex = -1;
+
+        if (args.length == 4) {
+            coordsStr = Arrays.copyOf(args, 3);
+            presetIndex = 3;
+        } else if (args.length > 1 && ("position".equalsIgnoreCase(args[0]) || "-p".equalsIgnoreCase(args[0]))) {
+            CachedPosition position = cachedPositions.get(sender.getName());
+            if (position == null) {
+                plugin.sendMessage(sender, "noposition", "command", label);
+                return true;
+            }
+            originalSenderCoords = position.getCoordinates();
+            world = plugin.getServer().getWorld(position.getWorld());
+            coordsStr[0] = String.valueOf(position.getCoordinateInput()[0]);
+            coordsStr[1] = String.valueOf(position.getCoordinateInput()[1]);
+            coordsStr[2] = String.valueOf(position.getCoordinateInput()[2]);
+            posYaw = position.getYaw();
+            posPitch = position.getPitch();
+            presetIndex = 1;
+            if (!world.getName().equals(position.getWorld()) && !sender.hasPermission(getPermission() + ".position.otherworld")) {
+                if (getWrongWorld().getCommands().isEmpty()) {
+                    plugin.sendMessage(sender, "nopermission", "permission", getPermission() + ".position.otherworld");
+                } else {
+                    getWrongWorld().execute(
+                            sender,
+                            args[1],
+                            coordsStr,
+                            originalSenderCoords,
+                            position.getWorld(),
+                            position.getCoordinates(),
+                            posYaw,
+                            posPitch,
+                            senderCoords,
+                            senderYaw,
+                            senderPitch
+                    );
+                }
+                return true;
+            }
+        }
+
+        if (presetIndex == -1) {
+            showHelp(sender);
+            return true;
+        }
+
+        // Get the configured preset string
+        String preset = getPreset(args[presetIndex]);
+        if (preset == null) {
+            plugin.sendMessage(sender, "presetnotfound", "preset", args[presetIndex], "command", getName());
+            return true;
+        }
+
+        if (perPresetPermissions() && !sender.hasPermission(getPermission() + "." + preset.toLowerCase())) {
+            plugin.sendMessage(sender, "nopresetpermission", "preset", args[presetIndex], "command", getName());
+            return true;
         }
 
         double[] targetCoords = new double[3];
@@ -169,64 +229,6 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
                 plugin.sendMessage(sender, "invalidnumber", "input", coordsStr[i]);
                 return true;
             }
-        }
-
-        double[] originalSenderCoords = Arrays.copyOf(senderCoords, 3);
-
-        if (args.length == 4) {
-            coordsStr = Arrays.copyOf(args, 3);
-            presetIndex = 3;
-        } else if (args.length > 1 && ("position".equalsIgnoreCase(args[0]) || "-p".equalsIgnoreCase(args[0]))) {
-            CachedPosition position = cachedPositions.get(sender.getName());
-            if (position == null) {
-                plugin.sendMessage(sender, "noposition", "command", label);
-                return true;
-            }
-            if (!world.getName().equals(position.getWorld()) && !sender.hasPermission(getPermission() + ".position.otherworld")) {
-                if (getWrongWorld().getCommands().isEmpty()) {
-                    plugin.sendMessage(sender, "nopermission", "permission", getPermission() + ".position.otherworld");
-                } else {
-                    getWrongWorld().execute(
-                            sender,
-                            args[1],
-                            coordsStr,
-                            originalSenderCoords,
-                            position.getWorld(),
-                            targetCoords,
-                            posYaw,
-                            posPitch,
-                            senderCoords,
-                            senderYaw,
-                            senderPitch
-                    );
-                }
-                return true;
-            }
-            originalSenderCoords = position.getCoordinates();
-            world = plugin.getServer().getWorld(position.getWorld());
-            coordsStr[0] = String.valueOf(position.getCoordinateInput()[0]);
-            coordsStr[1] = String.valueOf(position.getCoordinateInput()[1]);
-            coordsStr[2] = String.valueOf(position.getCoordinateInput()[2]);
-            posYaw = position.getYaw();
-            posPitch = position.getPitch();
-            presetIndex = 1;
-        }
-
-        if (presetIndex == -1) {
-            showHelp(sender);
-            return true;
-        }
-
-        // Get the configured preset string
-        String preset = getPreset(args[presetIndex]);
-        if (preset == null) {
-            plugin.sendMessage(sender, "presetnotfound", "preset", args[presetIndex], "command", getName());
-            return true;
-        }
-
-        if (perPresetPermissions() && !sender.hasPermission(getPermission() + "." + preset.toLowerCase())) {
-            plugin.sendMessage(sender, "nopresetpermission", "preset", args[presetIndex], "command", getName());
-            return true;
         }
 
         // Make sure chunk is loaded but don't generate it
