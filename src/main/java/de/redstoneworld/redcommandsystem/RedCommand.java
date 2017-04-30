@@ -166,8 +166,6 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
                 plugin.sendMessage(sender, "noposition", "command", label);
                 return true;
             }
-            originalSenderCoords = position.getCoordinates();
-            world = plugin.getServer().getWorld(position.getWorld());
             coordsStr[0] = String.valueOf(position.getCoordinateInput()[0]);
             coordsStr[1] = String.valueOf(position.getCoordinateInput()[1]);
             coordsStr[2] = String.valueOf(position.getCoordinateInput()[2]);
@@ -194,6 +192,8 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
                 }
                 return true;
             }
+            originalSenderCoords = position.getCoordinates();
+            world = plugin.getServer().getWorld(position.getWorld());
         }
 
         if (presetIndex == -1) {
