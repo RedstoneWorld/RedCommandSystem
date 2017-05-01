@@ -29,8 +29,8 @@ public class RedCommandExecutor {
             commands.add(config.getString("command"));
         }
         this.commands = commands;
-        this.output = config.getBoolean("execute.output", true);
-        this.permissions = config.getStringList("execute.permissions");
+        this.output = config.getBoolean("output", true);
+        this.permissions = config.getStringList("permissions");
     }
 
     public List<String> getCommands() {
