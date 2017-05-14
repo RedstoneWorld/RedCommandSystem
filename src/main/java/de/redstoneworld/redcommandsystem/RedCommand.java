@@ -31,7 +31,7 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
     private Map<String, CachedPosition> cachedPositions = new HashMap<>();
 
     public RedCommand(RedCommandSystem plugin, String name, String syntax, List<String> aliases, String permission, boolean presetPermissions, RedCommandExecutor execute, RedCommandExecutor wrongWorld) {
-        super(name, plugin.getName() + " command: " + name, "/" + name + " " + syntax.replace("<position>", "<x> <y> <z>"), aliases);
+        super(name, plugin.getName() + " command: " + name, "/" + name + " " + syntax.replace("<position>", "<x> <y> <z> [<world>]"), aliases);
         this.plugin = plugin;
         this.syntax = syntax;
         this.execute = execute;
@@ -66,7 +66,7 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
         if (args.length == 0 || args.length == 1 && "help".equalsIgnoreCase(args[0])) {
             showHelp(sender);
             return true;
-        } else if (args.length == 4 && "setpos".equalsIgnoreCase(args[0])) {
+        } else if (args.length > 3 && "setpos".equalsIgnoreCase(args[0])) {
             if (!sender.hasPermission(getPermission() + ".setpos")) {
                 plugin.sendMessage(sender, "nopermission", "permission", getPermission() + ".setpos");
                 return true;
@@ -111,6 +111,13 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
                     plugin.sendMessage(sender, "invalidnumber", "input", arg);
                     return true;
                 }
+            }
+            if (args.length > 4) {
+                if (!sender.hasPermission(getPermission() + ".otherworld")) {
+                    plugin.sendMessage(sender, "nopermission", "permission", getPermission() + ".otherworld");
+                    return true;
+                }
+                worldName = args[4];
             }
             cachedPositions.put(sender.getName(), new CachedPosition(worldName, senderCoords, Arrays.copyOfRange(args, 1, 4), yaw, pitch));
             plugin.sendMessage(sender, "cachedposition", "position", args[0] + " " + args[1] + " " + args[2]);
