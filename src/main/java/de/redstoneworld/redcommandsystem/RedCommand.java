@@ -96,22 +96,15 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
                 senderCoords[2] = ((BlockCommandSender) sender).getBlock().getLocation().getZ();
             }
 
-            for (int i = 0; i < 3; i++) {
-                String arg = args[i + 1];
-                try {
-                    if (arg.startsWith("~")) {
-                        String numberStr = arg.substring(1);
-                        if (numberStr.length() > 0) {
-                            Double.parseDouble(numberStr.startsWith(".") ? "0" + numberStr : numberStr);
-                        }
-                    } else {
-                        Double.parseDouble(arg);
-                    }
-                } catch (NumberFormatException e) {
-                    plugin.sendMessage(sender, "invalidnumber", "input", arg);
-                    return true;
-                }
+            String[] inputCoords = Arrays.copyOfRange(args, 1, 4);
+            double[] targetCoords;
+            try {
+                targetCoords = getTargetCoordinates(senderCoords, inputCoords);
+            } catch (NumberFormatException e) {
+                plugin.sendMessage(sender, "invalidnumber", "input", inputCoords[0] + " " + inputCoords[1] + " " + inputCoords[2]);
+                return true;
             }
+
             if (args.length > 4) {
                 if (!sender.hasPermission(getPermission() + ".otherworld")) {
                     plugin.sendMessage(sender, "nopermission", "permission", getPermission() + ".otherworld");
@@ -119,8 +112,8 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
                 }
                 worldName = args[4];
             }
-            cachedPositions.put(sender.getName(), new CachedPosition(worldName, senderCoords, Arrays.copyOfRange(args, 1, 4), yaw, pitch));
-            plugin.sendMessage(sender, "cachedposition", "position", args[0] + " " + args[1] + " " + args[2]);
+            cachedPositions.put(sender.getName(), new CachedPosition(worldName, senderCoords, pitch, yaw, inputCoords, targetCoords));
+            plugin.sendMessage(sender, "cachedposition", "position", inputCoords[0] + " " + inputCoords[1] + " " + inputCoords[2]);
             return true;
         }
 
@@ -173,11 +166,9 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
                 plugin.sendMessage(sender, "noposition", "command", label);
                 return true;
             }
-            coordsStr[0] = String.valueOf(position.getCoordinateInput()[0]);
-            coordsStr[1] = String.valueOf(position.getCoordinateInput()[1]);
-            coordsStr[2] = String.valueOf(position.getCoordinateInput()[2]);
-            posYaw = position.getYaw();
-            posPitch = position.getPitch();
+            coordsStr = position.getCoordinateInput();
+            posYaw = position.getSenderYaw();
+            posPitch = position.getSenderPitch();
             presetIndex = 1;
             if (!world.getName().equals(position.getWorld()) && !sender.hasPermission(getPermission() + ".position.otherworld")) {
                 if (getWrongWorld().getCommands().isEmpty()) {
@@ -186,10 +177,10 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
                     getWrongWorld().execute(
                             sender,
                             args[1],
-                            coordsStr,
-                            originalSenderCoords,
+                            position.getCoordinateInput(),
+                            position.getSenderCoordinates(),
                             position.getWorld(),
-                            position.getCoordinates(),
+                            position.getTargetCoordinates(),
                             posYaw,
                             posPitch,
                             senderCoords,
@@ -199,7 +190,7 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
                 }
                 return true;
             }
-            originalSenderCoords = position.getCoordinates();
+            originalSenderCoords = position.getSenderCoordinates();
             world = plugin.getServer().getWorld(position.getWorld());
         }
 
@@ -220,22 +211,12 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
             return true;
         }
 
-        double[] targetCoords = new double[3];
-        // Parse the position strings to generate a location later on and check if they are valid beforehand
-        for (int i = 0; i < 3; i++) {
-            try {
-                if (coordsStr[i].startsWith("~")) {
-                    String numberStr = coordsStr[i].substring(1);
-                    if (numberStr.length() > 0) {
-                        targetCoords[i] = senderCoords[i] + Double.parseDouble(numberStr.startsWith(".") ? "0" + numberStr : numberStr);
-                    }
-                } else {
-                    targetCoords[i] = Double.parseDouble(coordsStr[i]);
-                }
-            } catch (NumberFormatException e) {
-                plugin.sendMessage(sender, "invalidnumber", "input", coordsStr[i]);
-                return true;
-            }
+        double[] targetCoords;
+        try {
+            targetCoords = getTargetCoordinates(senderCoords, coordsStr);
+        } catch (NumberFormatException e) {
+            plugin.sendMessage(sender, "invalidnumber", "input", coordsStr[0] + " " + coordsStr[1] + " " + coordsStr[2]);
+            return true;
         }
 
         // Make sure chunk is loaded but don't generate it
@@ -261,6 +242,22 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
             plugin.sendMessage(sender, "command.failure", "command", getName(), "preset", args[presetIndex]);
         }
         return true;
+    }
+
+    private double[] getTargetCoordinates(double[] senderCoords, String[] coordsStr) throws NumberFormatException {
+        double[] targetCoords = new double[3];
+        // Parse the position strings to generate a location later on and check if they are valid beforehand
+        for (int i = 0; i < 3; i++) {
+            if (coordsStr[i].startsWith("~")) {
+                String numberStr = coordsStr[i].substring(1);
+                if (numberStr.length() > 0) {
+                    targetCoords[i] = senderCoords[i] + Double.parseDouble(numberStr.startsWith(".") ? "0" + numberStr : numberStr);
+                }
+            } else {
+                targetCoords[i] = Double.parseDouble(coordsStr[i]);
+            }
+        }
+        return targetCoords;
     }
 
     private void showHelp(CommandSender sender) {
