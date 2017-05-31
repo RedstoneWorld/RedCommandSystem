@@ -158,9 +158,18 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
         int presetIndex = -1;
 
         if (args.length == 4) {
+            if (!sender.hasPermission(getPermission() + ".position.manual")) {
+                plugin.sendMessage(sender, "nopermission", "permission", getPermission() + ".position.manual");
+                return true;
+            }
             coordsStr = Arrays.copyOf(args, 3);
             presetIndex = 3;
-        } else if (args.length > 1 && ("position".equalsIgnoreCase(args[0]) || "-p".equalsIgnoreCase(args[0]))) {
+        } else if (args.length == 1 || args.length > 1 && ("position".equalsIgnoreCase(args[0]) || "-p".equalsIgnoreCase(args[0]))) {
+            if (!sender.hasPermission(getPermission() + ".position.cached")) {
+                plugin.sendMessage(sender, "nopermission", "permission", getPermission() + ".position.cached");
+                return true;
+            }
+
             CachedPosition position = cachedPositions.get(sender.getName());
             if (position == null) {
                 plugin.sendMessage(sender, "noposition", "command", label);
@@ -169,7 +178,7 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
             coordsStr = position.getCoordinateInput();
             posYaw = position.getSenderYaw();
             posPitch = position.getSenderPitch();
-            presetIndex = 1;
+            presetIndex = args.length - 1;
             if (!world.getName().equals(position.getWorld()) && !sender.hasPermission(getPermission() + ".position.otherworld")) {
                 if (getWrongWorld().getCommands().isEmpty()) {
                     plugin.sendMessage(sender, "nopermission", "permission", getPermission() + ".position.otherworld");
@@ -266,7 +275,7 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
         sender.sendMessage(ChatColor.GRAY + " Execute a preset at a certain position");
         sender.sendMessage(ChatColor.RED + "/" + getName() + " setpos <x> <y> <z>");
         sender.sendMessage(ChatColor.GRAY + " Store position to later be used in /" + getName() + " position <name>. Data is stored until server restart or plugin reload!");
-        sender.sendMessage(ChatColor.RED + "/" + getName() + " " + getSyntax().replace("<position>", "position"));
+        sender.sendMessage(ChatColor.RED + "/" + getName() + " " + getSyntax().replace("<position>", "[position|-p]"));
         sender.sendMessage(ChatColor.GRAY + " Execute command preset with stored position");
         sender.sendMessage(ChatColor.RED + "/" + getName() + " help");
         sender.sendMessage(ChatColor.GRAY + " Show this help");
