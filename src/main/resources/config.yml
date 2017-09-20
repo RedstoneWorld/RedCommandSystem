@@ -4,7 +4,7 @@ messages:
   cachedposition: "&aCached position '%position%'"
   invalidnumber: "&f%input%&c is not a valid coordinate number!"
   commandnotfound: "&f%name&c does not exist in the commands config?"
-  nopresetpermission: "&cYou don't have the permission to use the preset &f%preset%&c of &f%command%&c!"
+  nopresetpermission: "&cYou don't have the permission to use the preset &f%preset%&c of &f%command%&c! (%permission%)"
   presetnotfound: "&cPreset &f%preset%&c does not exist in the config of &f%command%&c?"
   nopermission: "&cYou don't have the permission &f%permission%"
   command:
