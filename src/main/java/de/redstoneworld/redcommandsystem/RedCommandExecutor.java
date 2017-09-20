@@ -18,6 +18,7 @@ public class RedCommandExecutor {
     private final List<String> commands;
     private final boolean output;
     private final List<String> permissions;
+    private final boolean runAsOp;
 
     public RedCommandExecutor(RedCommandSystem plugin, ConfigurationSection config) throws IllegalArgumentException {
         if (config == null) {
@@ -31,6 +32,7 @@ public class RedCommandExecutor {
         this.commands = commands;
         this.output = config.getBoolean("output", true);
         this.permissions = config.getStringList("permissions");
+        this.runAsOp = config.getBoolean("run-as-op", false);
     }
 
     public List<String> getCommands() {
@@ -45,25 +47,31 @@ public class RedCommandExecutor {
         return permissions;
     }
 
+    public boolean runAsOp() {
+        return runAsOp;
+    }
+
     public boolean execute(CommandSender sender, String preset, String[] coordsStr, double[] originalSenderCoords, String targetWorld, double[] targetCoords, float posYaw, float posPitch, double[] senderCoords, float senderYaw, float senderPitch) {
         boolean success = true;
+        boolean wasOp = sender.isOp();
         // Temporally add permission to execute commands
         PermissionAttachment permAtt = sender.addAttachment(plugin);
-        try {
-            for (String perm : getPermissions()) {
-                permAtt.setPermission(perm, !perm.startsWith("-"));
-            }
+        for (String perm : getPermissions()) {
+            permAtt.setPermission(perm, !perm.startsWith("-"));
+        }
 
-            World senderWorld;
-            if (sender instanceof Entity) {
-                senderWorld = ((Entity) sender).getWorld();
-            } else if (sender instanceof BlockCommandSender) {
-                senderWorld = ((BlockCommandSender) sender).getBlock().getWorld();
-            } else {
-                senderWorld = sender.getServer().getWorlds().get(0);
-            }
-            String sendCommandFeedback = senderWorld.getGameRuleValue("sendCommandFeedback");
-            senderWorld.setGameRuleValue("sendCommandFeedback", String.valueOf(!(sender instanceof Player) || showOutput()));
+        World senderWorld;
+        if (sender instanceof Entity) {
+            senderWorld = ((Entity) sender).getWorld();
+        } else if (sender instanceof BlockCommandSender) {
+            senderWorld = ((BlockCommandSender) sender).getBlock().getWorld();
+        } else {
+            senderWorld = sender.getServer().getWorlds().get(0);
+        }
+        String sendCommandFeedback = senderWorld.getGameRuleValue("sendCommandFeedback");
+        senderWorld.setGameRuleValue("sendCommandFeedback", String.valueOf(!(sender instanceof Player) || showOutput()));
+
+        try {
             // Dispatch the command
             for (String command : getCommands()) {
                 command = addVariables(command,
@@ -82,13 +90,16 @@ public class RedCommandExecutor {
                 );
                 success &= plugin.getServer().dispatchCommand(sender, command);
             }
-            senderWorld.setGameRuleValue("sendCommandFeedback", sendCommandFeedback);
             // Remove permission again
         } catch (Exception e) {
             e.printStackTrace();
             success = false;
         } finally {
+            if (runAsOp() && !wasOp) {
+                sender.setOp(false);
+            }
             permAtt.remove();
+            senderWorld.setGameRuleValue("sendCommandFeedback", sendCommandFeedback);
         }
         return success;
     }

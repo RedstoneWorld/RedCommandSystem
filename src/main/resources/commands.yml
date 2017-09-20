@@ -16,6 +16,7 @@ redsetblock:
     output: false
     permissions:
     - minecraft.command.blockdata
+    run-as-op: true
   presetpermissions: false
   presets:
     Test1: '{Items:[{id:"minecraft:experience_bottle",Count:1,Slot:0}]}'
@@ -36,6 +37,7 @@ redsummon:
     output: false
     permissions:
     - minecraft.command.summon
+    run-as-op: true
   presetpermissions: false
   presets:
     Pigginator: 'Pig %position% {CustomName:"Pigginator"}'
