@@ -88,7 +88,7 @@ public class RedCommandExecutor {
                     senderYaw,
                     senderPitch
                 );
-                success &= plugin.getServer().dispatchCommand(sender, command);
+                success = plugin.getServer().dispatchCommand(sender, command) && success;
             }
             // Remove permission again
         } catch (Exception e) {
