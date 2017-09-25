@@ -10,6 +10,7 @@ redsetblock:
     output: false
     permissions:
     - minecraft.command.tellraw
+    run-as-console: true
   execute:
     commands:
     - "blockdata %position% %preset%"

@@ -19,6 +19,7 @@ public class RedCommandExecutor {
     private final boolean output;
     private final List<String> permissions;
     private final boolean runAsOp;
+    private final boolean runAsConsole;
 
     public RedCommandExecutor(RedCommandSystem plugin, ConfigurationSection config) throws IllegalArgumentException {
         if (config == null) {
@@ -33,6 +34,7 @@ public class RedCommandExecutor {
         this.output = config.getBoolean("output", true);
         this.permissions = config.getStringList("permissions");
         this.runAsOp = config.getBoolean("run-as-op", false);
+        this.runAsConsole = config.getBoolean("run-as-console", false);
     }
 
     public List<String> getCommands() {
@@ -49,6 +51,10 @@ public class RedCommandExecutor {
 
     public boolean runAsOp() {
         return runAsOp;
+    }
+
+    public boolean runAsConsole() {
+        return runAsConsole;
     }
 
     public boolean execute(CommandSender sender, String preset, String[] coordsStr, double[] originalSenderCoords, String targetWorld, double[] targetCoords, float posYaw, float posPitch, double[] senderCoords, float senderYaw, float senderPitch) {
@@ -72,6 +78,9 @@ public class RedCommandExecutor {
         senderWorld.setGameRuleValue("sendCommandFeedback", String.valueOf(!(sender instanceof Player) || showOutput()));
 
         try {
+            if (runAsOp() && !wasOp) {
+                sender.setOp(true);
+            }
             // Dispatch the command
             for (String command : getCommands()) {
                 command = addVariables(command,
@@ -88,7 +97,7 @@ public class RedCommandExecutor {
                     senderYaw,
                     senderPitch
                 );
-                success = plugin.getServer().dispatchCommand(sender, command) && success;
+                success = plugin.getServer().dispatchCommand(runAsConsole() ? plugin.getServer().getConsoleSender() : sender, command) && success;
             }
             // Remove permission again
         } catch (Exception e) {
