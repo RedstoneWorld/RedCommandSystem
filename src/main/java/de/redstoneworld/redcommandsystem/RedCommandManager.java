@@ -22,9 +22,15 @@ public class RedCommandManager {
         bukkitCommandMap = (CommandMap) commandMapField.get(plugin.getServer());
     }
 
-    public void register(final RedCommand command) {
-        bukkitCommandMap.register(plugin.getName().toLowerCase(), command);
-        commandMap.put(command.getName().toLowerCase(), command);
+    public void register(RedCommand command) {
+        RedCommand existing = commandMap.get(command.getName().toLowerCase());
+        if (existing != null) {
+            existing.copyFrom(command);
+            command = existing;
+        } else {
+            bukkitCommandMap.register(plugin.getName().toLowerCase(), command);
+            commandMap.put(command.getName().toLowerCase(), command);
+        }
         try {
             plugin.getServer().getPluginManager().addPermission(new Permission(command.getPermission(), command.getName() + " permission", PermissionDefault.OP));
             plugin.getServer().getPluginManager().addPermission(new Permission(command.getPermission() + ".setpos", command.getName() + " permission to set position", PermissionDefault.OP));

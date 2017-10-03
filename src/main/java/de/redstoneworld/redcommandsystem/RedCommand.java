@@ -21,12 +21,12 @@ import java.util.Map;
 public class RedCommand extends Command implements PluginIdentifiableCommand {
     private final RedCommandSystem plugin;
 
-    private final String syntax;
+    private String syntax;
 
-    private final boolean presetPermissions;
+    private boolean presetPermissions;
     private final Map<String, String> presets = new LinkedHashMap<>();
-    private final RedCommandExecutor execute;
-    private final RedCommandExecutor wrongWorld;
+    private RedCommandExecutor execute;
+    private RedCommandExecutor wrongWorld;
 
     private Map<String, CachedPosition> cachedPositions = new HashMap<>();
 
@@ -56,6 +56,20 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
                 new RedCommandExecutor(plugin, section.getConfigurationSection("execute")),
                 new RedCommandExecutor(plugin, section.getConfigurationSection("wrong-world"))
         );
+    }
+
+    /**
+     * Copy data from another command
+     * @param command   The command to copy from
+     */
+    public void copyFrom(RedCommand command) {
+        this.syntax = command.getSyntax();
+        this.execute = command.getExecute();
+        this.wrongWorld = command.getWrongWorld();
+        this.setPermission(command.getPermission());
+        this.presetPermissions = command.presetPermissions;
+        presets.clear();
+        presets.putAll(command.getPresets());
     }
 
     public boolean execute(CommandSender sender, String label, String[] args) {
