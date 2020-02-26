@@ -231,12 +231,12 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
                 plugin.sendMessage(sender, "presetnotfound", "preset", s, "command", getName());
                 return true;
             }
-            presets.put(s, preset);
-        }
 
-        if (perPresetPermissions() && !sender.hasPermission(getPermission() + ".preset." + args[presetIndex].toLowerCase())) {
-            plugin.sendMessage(sender, "nopresetpermission", "preset", args[presetIndex], "command", getName(), "permission", getPermission() + ".preset." + args[presetIndex].toLowerCase());
-            return true;
+            if (perPresetPermissions() && !sender.hasPermission(getPermission() + ".preset." + s.toLowerCase())) {
+                plugin.sendMessage(sender, "nopresetpermission", "preset", s, "command", getName(), "permission", getPermission() + ".preset." + s.toLowerCase());
+                return true;
+            }
+            presets.put(s, preset);
         }
 
         double[] targetCoords;
