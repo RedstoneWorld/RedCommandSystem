@@ -12,6 +12,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.plugin.Plugin;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -223,10 +224,14 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
         }
 
         // Get the configured preset string
-        String preset = getPreset(args[presetIndex]);
-        if (preset == null) {
-            plugin.sendMessage(sender, "presetnotfound", "preset", args[presetIndex], "command", getName());
-            return true;
+        Map<String, String> presets = new LinkedHashMap<>();
+        for (String s : args[presetIndex].split(",")) {
+            String preset = getPreset(args[presetIndex]);
+            if (preset == null) {
+                plugin.sendMessage(sender, "presetnotfound", "preset", s, "command", getName());
+                return true;
+            }
+            presets.put(s, preset);
         }
 
         if (perPresetPermissions() && !sender.hasPermission(getPermission() + ".preset." + args[presetIndex].toLowerCase())) {
@@ -247,24 +252,52 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
         if (!loc.getChunk().isLoaded()) {
             loc.getChunk().load(false);
         }
-        if (getExecute().execute(
-                sender,
-                preset,
-                coordsStr,
-                originalSenderCoords,
-                world.getName(),
-                targetCoords,
-                posYaw,
-                posPitch,
-                senderCoords,
-                senderYaw,
-                senderPitch
-        )) {
-            plugin.sendMessage(sender, "command.success", "command", getName(), "preset", args[presetIndex]);
-        } else {
-            plugin.sendMessage(sender, "command.failure", "command", getName(), "preset", args[presetIndex]);
+        List<String> failure = new ArrayList<>();
+        List<String> success = new ArrayList<>();
+        for (Map.Entry<String, String> preset : presets.entrySet()) {
+            if (getExecute().execute(
+                    sender,
+                    preset.getValue(),
+                    coordsStr,
+                    originalSenderCoords,
+                    world.getName(),
+                    targetCoords,
+                    posYaw,
+                    posPitch,
+                    senderCoords,
+                    senderYaw,
+                    senderPitch
+            )) {
+                success.add(preset.getKey());
+            } else {
+                failure.add(preset.getKey());
+            }
+        }
+
+        if (success.size() == 1) {
+            plugin.sendMessage(sender, "command.success", "command", getName(), "preset", success.get(0));
+        } else if (!success.isEmpty()) {
+            plugin.sendMessage(sender, "command.success-multiple", "command", getName(), "presets", join(success));
+        }
+        if (failure.size() == 1) {
+            plugin.sendMessage(sender, "command.failure", "command", getName(), "preset", failure.get(0));
+        } else if (!failure.isEmpty()) {
+            plugin.sendMessage(sender, "command.failure-multiple", "command", getName(), "presets", join(failure));
         }
         return true;
+    }
+
+    private String join(List<String> strings) {
+        if (strings.isEmpty()) {
+            return "";
+        } else if (strings.size() == 1) {
+            return strings.get(0);
+        }
+        StringBuilder sb = new StringBuilder(strings.get(0));
+        for (int i = 1; i < strings.size() - 1; i++) {
+            sb.append(", ").append(strings.get(i));
+        }
+        return sb.append(" & ").append(strings.get(strings.size() - 1)).toString();
     }
 
     private double[] getTargetCoordinates(double[] senderCoords, String[] coordsStr) throws NumberFormatException {

@@ -9,4 +9,6 @@ messages:
   nopermission: "&cYou don't have the permission &f%permission%"
   command:
     success: "&eExecuted &f%command%&e with preset &f%preset%&e!"
+    success-multiple: "&eExecuted &f%command%&e with presets &f%presets%&e!"
     failure: "&cFailed to execute &f%command%&c with preset &f%preset%&c!"
+    failure-multiple: "&cFailed to execute the following presets for &f%command%&c: &f%presets%&c!"
