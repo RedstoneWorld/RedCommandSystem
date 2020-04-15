@@ -226,7 +226,7 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
         // Get the configured preset string
         Map<String, String> presets = new LinkedHashMap<>();
         for (String s : args[presetIndex].split(",")) {
-            String preset = getPreset(args[presetIndex]);
+            String preset = getPreset(s);
             if (preset == null) {
                 plugin.sendMessage(sender, "presetnotfound", "preset", s, "command", getName());
                 return true;
