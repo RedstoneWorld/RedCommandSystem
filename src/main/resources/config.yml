@@ -1,5 +1,6 @@
 imported: false
 messages:
+  prefix: "&f[&4RCS&f]"
   noposition: "&cYou don't have any positions cached! Use /%command% setpos <x> <y> <z> to cache one!"
   cachedposition: "&aCached position '%position%'"
   invalidnumber: "&f%input%&c is not a valid coordinate number!"
