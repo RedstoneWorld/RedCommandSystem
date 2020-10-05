@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Map;
 
 public class RedCommand extends Command implements PluginIdentifiableCommand {
+    private static final String POSITION_ID_PREFIX = "-pid=";
+
     private final RedCommandSystem plugin;
 
     private String syntax;
@@ -120,14 +122,19 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
                 return true;
             }
 
-            if (args.length > 4) {
-                if (!sender.hasPermission(getPermission() + ".otherworld")) {
-                    plugin.sendMessage(sender, "nopermission", "permission", getPermission() + ".otherworld");
-                    return true;
+            StringBuilder positionId = new StringBuilder(sender.getName());
+            for (int i = 4; i < args.length; i++) {
+                if (args[i].startsWith(POSITION_ID_PREFIX)) {
+                    positionId.append(":").append(args[i].substring(POSITION_ID_PREFIX.length()));
+                } else {
+                    if (!sender.hasPermission(getPermission() + ".otherworld")) {
+                        plugin.sendMessage(sender, "nopermission", "permission", getPermission() + ".otherworld");
+                        return true;
+                    }
+                    worldName = args[i];
                 }
-                worldName = args[4];
             }
-            cachedPositions.put(sender.getName(), new CachedPosition(worldName, senderCoords, pitch, yaw, inputCoords, targetCoords));
+            cachedPositions.put(positionId.toString(), new CachedPosition(worldName, senderCoords, pitch, yaw, inputCoords, targetCoords));
             plugin.sendMessage(sender, "cachedposition", "position", inputCoords[0] + " " + inputCoords[1] + " " + inputCoords[2]);
             return true;
         }
@@ -179,13 +186,19 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
             }
             coordsStr = Arrays.copyOf(args, 3);
             presetIndex = 3;
-        } else if (args.length == 1 || args.length > 1 && ("position".equalsIgnoreCase(args[0]) || "-p".equalsIgnoreCase(args[0]))) {
+        } else if (args.length == 1 || "position".equalsIgnoreCase(args[0])
+                || "-p".equalsIgnoreCase(args[0]) || args[0].toLowerCase().startsWith(POSITION_ID_PREFIX)) {
             if (!sender.hasPermission(getPermission() + ".position.cached")) {
                 plugin.sendMessage(sender, "nopermission", "permission", getPermission() + ".position.cached");
                 return true;
             }
 
-            CachedPosition position = cachedPositions.get(sender.getName());
+            StringBuilder positionId = new StringBuilder(sender.getName());
+            if (args[0].toLowerCase().startsWith(POSITION_ID_PREFIX)) {
+                positionId.append(":").append(args[0].substring(POSITION_ID_PREFIX.length()));
+            }
+
+            CachedPosition position = cachedPositions.get(positionId.toString());
             if (position == null) {
                 plugin.sendMessage(sender, "noposition", "command", label);
                 return true;
@@ -200,7 +213,7 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
                 } else {
                     getWrongWorld().execute(
                             sender,
-                            args[1],
+                            args[presetIndex],
                             position.getCoordinateInput(),
                             position.getSenderCoordinates(),
                             position.getWorld(),
