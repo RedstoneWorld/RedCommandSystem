@@ -9,12 +9,14 @@ import org.bukkit.entity.Player;
 import org.bukkit.permissions.PermissionAttachment;
 
 import java.util.List;
+import java.util.Random;
 
 /**
  * Created by Max on 08.04.2017.
  */
 public class RedCommandExecutor {
     private final RedCommandSystem plugin;
+    private final Random random = new Random();
     private final List<String> commands;
     private final boolean output;
     private final List<String> permissions;
@@ -145,7 +147,8 @@ public class RedCommandExecutor {
                 "senderpitch", String.valueOf(Math.floor(senderPitch)),
                 "senderexactyaw", String.valueOf(senderYaw),
                 "senderexactpitch", String.valueOf(senderPitch),
-                "sender", sender.getName()
+                "sender", sender.getName(),
+                "rcs-random", String.valueOf(random.nextLong())
         );
         if (sender instanceof Player) {
             command = plugin.translate(command, "player", sender.getName());
