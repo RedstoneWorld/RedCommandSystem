@@ -211,6 +211,8 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
                 } else {
                     positionId += ":" + id;
                 }
+            } else {
+                positionId += ":" + NON_ID_POSITION;
             }
 
             CachedPosition position = cachedPositions.get(positionId);
