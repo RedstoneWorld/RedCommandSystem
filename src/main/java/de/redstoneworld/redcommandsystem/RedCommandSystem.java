@@ -8,6 +8,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.util.Random;
 import java.util.logging.Level;
 
 public class RedCommandSystem extends JavaPlugin {

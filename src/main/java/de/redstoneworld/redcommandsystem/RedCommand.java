@@ -20,7 +20,9 @@ import java.util.List;
 import java.util.Map;
 
 public class RedCommand extends Command implements PluginIdentifiableCommand {
-    private static final String POSITION_ID_PREFIX = "-pid=";
+    private static final String POSITION_ID = "-pid";
+    private static final String POSITION_ID_PREFIX = POSITION_ID + "=";
+    private static final String NON_ID_POSITION = "#SELF";
 
     private final RedCommandSystem plugin;
 
@@ -123,9 +125,13 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
             }
 
             StringBuilder positionId = new StringBuilder(sender.getName());
+            boolean hasId = false;
             for (int i = 4; i < args.length; i++) {
-                if (args[i].startsWith(POSITION_ID_PREFIX)) {
+                if (args[i].equals(POSITION_ID)) {
+                    positionId.append(":").append(getExecute().getRandomValue());
+                } else if (args[i].startsWith(POSITION_ID_PREFIX)) {
                     positionId.append(":").append(args[i].substring(POSITION_ID_PREFIX.length()));
+                    hasId = true;
                 } else {
                     if (!sender.hasPermission(getPermission() + ".otherworld")) {
                         plugin.sendMessage(sender, "nopermission", "permission", getPermission() + ".otherworld");
@@ -133,6 +139,9 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
                     }
                     worldName = args[i];
                 }
+            }
+            if (!hasId) {
+                positionId.append(":").append(NON_ID_POSITION);
             }
             cachedPositions.put(positionId.toString(), new CachedPosition(worldName, senderCoords, pitch, yaw, inputCoords, targetCoords));
             plugin.sendMessage(sender, "cachedposition", "position", inputCoords[0] + " " + inputCoords[1] + " " + inputCoords[2]);
@@ -179,6 +188,7 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
 
         int presetIndex = -1;
 
+        String positionId = "";
         if (args.length == 4) {
             if (!sender.hasPermission(getPermission() + ".position.manual")) {
                 plugin.sendMessage(sender, "nopermission", "permission", getPermission() + ".position.manual");
@@ -193,12 +203,17 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
                 return true;
             }
 
-            StringBuilder positionId = new StringBuilder(sender.getName());
+            positionId = sender.getName();
             if (args[0].toLowerCase().startsWith(POSITION_ID_PREFIX)) {
-                positionId.append(":").append(args[0].substring(POSITION_ID_PREFIX.length()));
+                String id = args[0].substring(POSITION_ID_PREFIX.length());
+                if (id.startsWith(sender.getName() + ":")) {
+                    positionId = id;
+                } else {
+                    positionId += ":" + id;
+                }
             }
 
-            CachedPosition position = cachedPositions.get(positionId.toString());
+            CachedPosition position = cachedPositions.get(positionId);
             if (position == null) {
                 plugin.sendMessage(sender, "noposition", "command", label);
                 return true;
@@ -214,6 +229,7 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
                     getWrongWorld().execute(
                             sender,
                             args[presetIndex],
+                            positionId,
                             position.getCoordinateInput(),
                             position.getSenderCoordinates(),
                             position.getWorld(),
@@ -271,6 +287,7 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
             if (getExecute().execute(
                     sender,
                     preset.getValue(),
+                    positionId,
                     coordsStr,
                     originalSenderCoords,
                     world.getName(),

@@ -59,7 +59,7 @@ public class RedCommandExecutor {
         return runAsConsole;
     }
 
-    public boolean execute(CommandSender sender, String preset, String[] coordsStr, double[] originalSenderCoords, String targetWorld, double[] targetCoords, float posYaw, float posPitch, double[] senderCoords, float senderYaw, float senderPitch) {
+    public boolean execute(CommandSender sender, String preset, String positionId, String[] coordsStr, double[] originalSenderCoords, String targetWorld, double[] targetCoords, float posYaw, float posPitch, double[] senderCoords, float senderYaw, float senderPitch) {
         boolean success = true;
         boolean wasOp = sender.isOp();
         // Temporally add permission to execute commands
@@ -88,6 +88,7 @@ public class RedCommandExecutor {
                 command = addVariables(command,
                     sender,
                     preset,
+                    positionId,
                     coordsStr,
                     originalSenderCoords,
                     targetWorld,
@@ -115,10 +116,12 @@ public class RedCommandExecutor {
         return success;
     }
 
-    private String addVariables(String command, CommandSender sender, String preset, String[] coordsStr, double[] originalSenderCoords, String worldName, double[] targetCoords, float posYaw, float posPitch, String senderWorld, double[] senderCoords, float senderYaw, float senderPitch) {
+    private String addVariables(String command, CommandSender sender, String preset, String positionId, String[] coordsStr, double[] originalSenderCoords, String worldName, double[] targetCoords, float posYaw, float posPitch, String senderWorld, double[] senderCoords, float senderYaw, float senderPitch) {
         command = plugin.translate(command,
                 "preset", preset,
                 "position", coordsStr[0] + " " + coordsStr[1] + " " + coordsStr[2],
+                "positionid", positionId,
+                "pid", positionId,
                 "possenderx", String.valueOf(Math.floor(originalSenderCoords[0])),
                 "possendery", String.valueOf(Math.floor(originalSenderCoords[1])),
                 "possenderz", String.valueOf(Math.floor(originalSenderCoords[2])),
@@ -148,11 +151,15 @@ public class RedCommandExecutor {
                 "senderexactyaw", String.valueOf(senderYaw),
                 "senderexactpitch", String.valueOf(senderPitch),
                 "sender", sender.getName(),
-                "rcs-random", String.valueOf(random.nextLong())
+                "rcs-random", getRandomValue()
         );
         if (sender instanceof Player) {
             command = plugin.translate(command, "player", sender.getName());
         }
         return command;
+    }
+
+    String getRandomValue() {
+        return String.valueOf(random.nextLong());
     }
 }
