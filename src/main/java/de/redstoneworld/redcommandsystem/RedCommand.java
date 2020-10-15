@@ -129,6 +129,7 @@ public class RedCommand extends Command implements PluginIdentifiableCommand {
             for (int i = 4; i < args.length; i++) {
                 if (args[i].equals(POSITION_ID)) {
                     positionId.append(":").append(getExecute().getRandomValue());
+                    hasId = true;
                 } else if (args[i].startsWith(POSITION_ID_PREFIX)) {
                     positionId.append(":").append(args[i].substring(POSITION_ID_PREFIX.length()));
                     hasId = true;
